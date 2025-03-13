@@ -1,16 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import CodeCellView from "@components/CodeCellView";
 import ScrollY from "@components/ScrollY";
 import Toolbar from "@components/Toolbar";
-import { Paper } from "@mui/material";
+import { Alert, Paper } from "@mui/material";
 import {
   appendCellToNotebook,
   deleteCell,
   emptyCodeCell,
   emptyNotebook,
+  fromJS,
   ImmutableCodeCell,
   ImmutableNotebook,
   insertCellAfter,
   insertCellAt,
+  toJS,
 } from "@nteract/commutable";
 import {
   FunctionComponent,
@@ -23,13 +26,25 @@ import {
 import PythonSessionClient from "../../jupyter/PythonSessionClient";
 import executeCell from "./executeCell";
 import { useJupyterConnectivity } from "../../jupyter/JupyterConnectivity";
+import {
+  loadNotebook,
+  saveNotebookDebounced,
+  GithubNotebookParams,
+  setCurrentGithubParams,
+  fetchGithubNotebook,
+} from "../../shared/util/indexedDb";
 
-type HomePageProps = { width: number; height: number };
+type HomePageProps = {
+  width: number;
+  height: number;
+  githubParams?: GithubNotebookParams;
+};
 
-const initialNotebook = appendCellToNotebook(
-  emptyNotebook,
-  emptyCodeCell.set("source", 'print("Hello from nbfiddle!")'),
-);
+const createInitialNotebook = () =>
+  appendCellToNotebook(
+    emptyNotebook,
+    emptyCodeCell.set("source", 'print("Hello from nbfiddle!")'),
+  );
 
 type ExecutionState = {
   executingCellId: string | null;
@@ -63,11 +78,20 @@ const executionReducer = (
   }
 };
 
-const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
+const NotebookView: FunctionComponent<HomePageProps> = ({
+  width,
+  height,
+  githubParams,
+}) => {
   const paperRef = useRef<HTMLDivElement>(null);
-  const [notebook, setNotebook] = useState<ImmutableNotebook>(initialNotebook);
+  const [notebook, setNotebook] = useState<ImmutableNotebook>(
+    createInitialNotebook(),
+  );
+  const [remoteNotebook, setRemoteNotebook] =
+    useState<ImmutableNotebook | null>(null);
+  const [loadError, setLoadError] = useState<string>();
   const [activeCellId, setActiveCellId] = useState<string | undefined>(
-    initialNotebook.cellOrder.first(),
+    createInitialNotebook().cellOrder.first(),
   );
   const [cellIdRequiringFocus, setCellIdRequiringFocus] = useState<
     string | null
@@ -75,11 +99,73 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
 
   const [currentCellExecution, dispatchExecution] = useReducer(
     executionReducer,
-    { executingCellId: null, cellExecutionCounts: {}, nextExecutionCount: 1 },
+    {
+      executingCellId: null,
+      cellExecutionCounts: {},
+      nextExecutionCount: 1,
+    },
   );
 
-  const maxWidth = 1200; // Maximum width for the notebook
-  const notebookWidth = Math.min(width - 48, maxWidth); // 24px padding on each side
+  const hasLocalChanges = useHasLocalChanges(notebook, remoteNotebook);
+
+  const loadGithubNotebook = useCallback(async () => {
+    if (!githubParams) return;
+    try {
+      setLoadError(undefined);
+      const notebookData = await fetchGithubNotebook(githubParams);
+      const reconstructedNotebook = fromJS(notebookData);
+      setRemoteNotebook(reconstructedNotebook);
+      setNotebook(reconstructedNotebook);
+      if (reconstructedNotebook.cellOrder.size > 0) {
+        setActiveCellId(reconstructedNotebook.cellOrder.first());
+      }
+    } catch (error) {
+      console.error("Error loading GitHub notebook:", error);
+      setLoadError(
+        `Failed to load notebook from GitHub: ${(error as Error).message}`,
+      );
+    }
+  }, [githubParams]);
+
+  const resetToGithubVersion = useCallback(() => {
+    if (remoteNotebook) {
+      setNotebook(remoteNotebook);
+      if (remoteNotebook.cellOrder.size > 0) {
+        setActiveCellId(remoteNotebook.cellOrder.first());
+      }
+    }
+  }, [remoteNotebook]);
+
+  // Load saved notebook on mount or when GitHub params change
+  useEffect(() => {
+    setCurrentGithubParams(githubParams || null);
+    if (githubParams) {
+      loadGithubNotebook();
+    } else {
+      loadNotebook()
+        .then((savedNotebook) => {
+          if (savedNotebook) {
+            const reconstructedNotebook = fromJS(savedNotebook);
+            setNotebook(reconstructedNotebook);
+            if (reconstructedNotebook.cellOrder.size > 0) {
+              setActiveCellId(reconstructedNotebook.cellOrder.first());
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading notebook:", error);
+          setLoadError("Failed to load saved notebook");
+        });
+    }
+  }, [githubParams, loadGithubNotebook]);
+
+  // Save notebook on changes with debouncing
+  useEffect(() => {
+    saveNotebookDebounced(toJS(notebook));
+  }, [notebook]);
+
+  const maxWidth = 1200;
+  const notebookWidth = Math.min(width - 48, maxWidth);
   const leftPadding = Math.max((width - notebookWidth) / 2, 24);
 
   const jupyterConnectivityState = useJupyterConnectivity();
@@ -87,6 +173,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [sessionClient, setSessionClient] =
     useState<PythonSessionClient | null>(null);
   const handleRestartSession = useCallback(async () => {
+    canceledRef.current = true;
     if (sessionClient) {
       await sessionClient.shutdown();
       setSessionClient(null);
@@ -98,11 +185,12 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
     }
   }, [sessionClient, jupyterConnectivityState]);
   useEffect(() => {
-    // if there is no session, but jupyter server is available, then restart the session
     if (!sessionClient && jupyterConnectivityState.jupyterServerIsAvailable) {
       handleRestartSession();
     }
   }, [sessionClient, jupyterConnectivityState, handleRestartSession]);
+
+  const canceledRef = useRef(false);
 
   const handleExecute = useCallback(
     async ({ advance }: { advance: boolean }) => {
@@ -121,25 +209,32 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
 
       let newNotebook = notebook;
 
-      // clear the outputs
       const newCodeCell = codeCell.set("outputs", emptyCodeCell.outputs);
       newNotebook = newNotebook.setIn(["cellMap", activeCellId], newCodeCell);
       setNotebook(newNotebook);
 
       dispatchExecution({ type: "start-execution", cellId: activeCellId });
 
-      await executeCell(newCodeCell.get("source"), sessionClient, (outputs) => {
-        const newCodeCell = codeCell.set("outputs", outputs);
-        newNotebook = newNotebook.setIn(["cellMap", activeCellId], newCodeCell);
-        setNotebook(newNotebook);
-      });
+      canceledRef.current = false;
+      await executeCell(
+        newCodeCell.get("source"),
+        sessionClient,
+        (outputs) => {
+          const newCodeCell = codeCell.set("outputs", outputs);
+          newNotebook = newNotebook.setIn(
+            ["cellMap", activeCellId],
+            newCodeCell,
+          );
+          setNotebook(newNotebook);
+        },
+        canceledRef,
+      );
 
       dispatchExecution({ type: "end-execution", cellId: activeCellId });
 
       if (advance) {
         const currentIndex = newNotebook.cellOrder.indexOf(activeCellId);
         if (currentIndex === newNotebook.cellOrder.size - 1) {
-          // Create new cell if we're at the end
           const newId: string = makeRandomId();
           const newCodeCell = emptyCodeCell.set("source", ``);
           newNotebook = insertCellAfter(
@@ -217,17 +312,28 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
 
   return (
     <>
+      {loadError && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          {loadError}
+        </Alert>
+      )}
       <Toolbar
         executingCellId={currentCellExecution.executingCellId}
         onRestartSession={handleRestartSession}
         sessionClient={sessionClient}
+        onCancel={() => {
+          canceledRef.current = true;
+        }}
+        githubParams={githubParams}
+        hasLocalChanges={hasLocalChanges}
+        onResetToGithub={resetToGithubVersion}
       />
       <ScrollY width={width} height={height - 48}>
         <div style={{ padding: `24px ${leftPadding}px` }}>
           <Paper
             elevation={1}
             sx={{
-              width: notebookWidth - (leftPadding > 24 ? 0 : 48), // Adjust width if we're at minimum padding
+              width: notebookWidth - (leftPadding > 24 ? 0 : 48),
               minHeight: 200,
               backgroundColor: "background.paper",
               padding: 3,
@@ -253,11 +359,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
                 handleAddCellAfterActiveCell();
               } else if (event.key === "x") {
                 handleDeleteActiveCell();
-              }
-              // escape
-              else if (event.key === "Escape") {
-                console.log("Escape");
-                // need to set focus to the paper so that it unfocuses the editor in the code cell
+              } else if (event.key === "Escape") {
                 paperRef.current?.focus();
               }
             }}
@@ -336,5 +438,69 @@ const NotebookView: FunctionComponent<HomePageProps> = ({ width, height }) => {
 function makeRandomId() {
   return crypto.randomUUID();
 }
+
+let dataToTest:
+  | {
+      notebook: ImmutableNotebook;
+      remoteNotebook: ImmutableNotebook | null;
+    }
+  | undefined = undefined;
+let testScheduled = false;
+const useHasLocalChanges = (
+  notebook: ImmutableNotebook,
+  remoteNotebook: ImmutableNotebook | null,
+) => {
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  useEffect(() => {
+    dataToTest = { notebook, remoteNotebook };
+    if (!testScheduled) {
+      testScheduled = true;
+      setTimeout(() => {
+        if (dataToTest) {
+          const { notebook, remoteNotebook } = dataToTest;
+          setHasLocalChanges(
+            remoteNotebook
+              ? !checkNotebooksEqual(notebook, remoteNotebook)
+              : false,
+          );
+          dataToTest = undefined;
+          testScheduled = false;
+        }
+      }, 1000);
+    }
+  }, [notebook, remoteNotebook]);
+
+  return hasLocalChanges;
+};
+
+const checkNotebooksEqual = (
+  notebook1: ImmutableNotebook,
+  notebook2: ImmutableNotebook,
+) => {
+  return checkDeepEqual(toJS(notebook1), toJS(notebook2));
+};
+
+const checkDeepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== "object") return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!checkDeepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!checkDeepEqual(a[key], b[key])) return false;
+  }
+  return true;
+};
 
 export default NotebookView;

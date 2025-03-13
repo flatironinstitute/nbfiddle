@@ -2,33 +2,53 @@ import {
   AppBar,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Toolbar as MuiToolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { FunctionComponent, useState } from "react";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
+import { GithubNotebookParams } from "../shared/util/indexedDb";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 type ToolbarProps = {
   executingCellId: string | null;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
+  onCancel?: () => void;
+  githubParams?: GithubNotebookParams;
+  hasLocalChanges?: boolean;
+  onResetToGithub?: () => void;
 };
 
 const Toolbar: FunctionComponent<ToolbarProps> = ({
   executingCellId,
   onRestartSession,
   sessionClient,
+  onCancel,
+  githubParams,
+  hasLocalChanges,
+  onResetToGithub,
 }) => {
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
     onRestartSession();
+  };
+
+  const handleResetToGithub = () => {
+    setResetDialogOpen(false);
+    onResetToGithub?.();
   };
 
   const { jupyterServerIsAvailable } = useJupyterConnectivity();
@@ -77,13 +97,52 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             {status.text}
           </Typography>
         </Box>
-        <Typography
-          variant="body2"
-          color={executingCellId ? "primary" : "text.secondary"}
-          sx={{ fontFamily: "monospace" }}
-        >
-          {executingCellId ? `Executing cell: ${executingCellId}` : "Ready"}
-        </Typography>
+        {executingCellId ? (
+          <Tooltip title={`Executing cell`}>
+            <CircularProgress size={20} color="primary" />
+          </Tooltip>
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontFamily: "monospace" }}
+          >
+            Ready
+          </Typography>
+        )}
+
+        {githubParams && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}>
+            <GitHubIcon fontSize="small" />
+            <Tooltip
+              title={`${githubParams.owner}/${githubParams.repo}/${githubParams.path}`}
+            >
+              <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                {githubParams.owner}/{githubParams.repo}/{githubParams.path}
+              </Typography>
+            </Tooltip>
+            {hasLocalChanges && (
+              <Typography
+                variant="body2"
+                color="warning.main"
+                sx={{ fontStyle: "italic" }}
+              >
+                (Modified)
+              </Typography>
+            )}
+            {hasLocalChanges && onResetToGithub && (
+              <Tooltip title="Reset to GitHub version">
+                <IconButton
+                  size="small"
+                  onClick={() => setResetDialogOpen(true)}
+                >
+                  <RestartAltIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        )}
+
         <Button
           size="small"
           color="primary"
@@ -93,6 +152,11 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         >
           Restart Session
         </Button>
+        {executingCellId && onCancel && (
+          <Button size="small" color="error" onClick={onCancel}>
+            Cancel Execution
+          </Button>
+        )}
       </MuiToolbar>
 
       <Dialog
@@ -113,6 +177,30 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             variant="contained"
           >
             Restart
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
+        aria-labelledby="reset-dialog-title"
+      >
+        <DialogTitle id="reset-dialog-title">
+          Reset to GitHub Version?
+        </DialogTitle>
+        <DialogContent>
+          This will discard all local changes and reset the notebook to the
+          version from GitHub.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResetDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleResetToGithub}
+            color="error"
+            variant="contained"
+          >
+            Reset
           </Button>
         </DialogActions>
       </Dialog>

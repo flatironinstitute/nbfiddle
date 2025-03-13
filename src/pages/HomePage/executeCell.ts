@@ -7,6 +7,7 @@ const executeCell = async (
   code: string,
   sessionClient: PythonSessionClient,
   onOutputsUpdated: (outputs: List<ImmutableOutput>) => void,
+  canceledRef: { current: boolean },
 ): Promise<List<ImmutableOutput>> => {
   const outputs: ImmutableOutput[] = [];
   const removeOnOutputItemCallback = sessionClient.onOutputItem((item) => {
@@ -49,7 +50,30 @@ const executeCell = async (
     onOutputsUpdated(List(outputs));
   });
   try {
-    await sessionClient.runCode(code);
+    await new Promise<void>((resolve, reject) => {
+      let finished = false;
+      let executionCanceled = false;
+      sessionClient
+        .runCode(code)
+        .then(() => {
+          finished = true;
+          resolve();
+        })
+        .catch((error) => {
+          finished = true;
+          reject(error);
+        });
+      (async () => {
+        while (!finished && !executionCanceled) {
+          if (canceledRef.current) {
+            sessionClient.cancelExecution();
+            executionCanceled = true;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      })();
+    });
+
     return List(outputs);
   } finally {
     removeOnOutputItemCallback();
