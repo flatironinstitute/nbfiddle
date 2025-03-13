@@ -63,6 +63,21 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
     string | null
   >(null);
 
+  // Scroll active cell into view when it changes
+  useEffect(() => {
+    if (activeCellId) {
+      const activeElement = document.querySelector(
+        `[data-cell-id="${activeCellId}"]`,
+      );
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }
+  }, [activeCellId]);
+
   const [currentCellExecution, dispatchExecution] = useReducer(
     executionReducer,
     {
@@ -364,6 +379,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
                 return (
                   <div
                     key={cellId}
+                    data-cell-id={cellId}
                     style={{
                       border:
                         cellId === activeCellId
