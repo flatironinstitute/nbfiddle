@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ImmutableCodeCell } from "@nteract/commutable";
 import * as monaco from "monaco-editor";
@@ -78,7 +77,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
   return (
     <div style={{ border: "2px solid #e0e0e0", padding: 3 }}>
       <Editor
-        height={`${Math.max(1, cell.get("source").split("\n").length) * 20}px`}
+        height={`${Math.max(1, cell.get("source").split("\n").length) * 20 + 15}px`} // need to leave some space for a potential horizontal scrollbar
         defaultLanguage="python"
         value={cell.get("source")}
         onChange={handleEditorChange}
@@ -91,6 +90,11 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
           fontSize: 14,
           renderLineHighlight: "none",
           theme: "vs",
+          scrollbar: {
+            vertical: "hidden",
+            horizontal: "auto",
+            alwaysConsumeMouseWheel: false, // very important so that the wheel events will not get consumed by the editor and we can scroll the main document
+          },
         }}
         onMount={handleEditorMount}
       />

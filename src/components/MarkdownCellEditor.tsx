@@ -86,7 +86,7 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
           fontSize: 14,
           renderLineHighlight: "none",
           theme: "vs",
-          wordWrap: "on"
+          wordWrap: "on",
         }}
         onMount={handleEditorMount}
       />
