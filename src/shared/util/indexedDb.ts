@@ -27,35 +27,39 @@ export async function openDb(): Promise<IDBDatabase> {
   });
 }
 
-let currentGithubParams: GithubNotebookParams | null = null;
-export function setCurrentGithubParams(params: GithubNotebookParams | null) {
-  currentGithubParams = params;
-}
-
-function getStorageKey(): string {
-  if (!currentGithubParams) return "current";
-  return `github:${currentGithubParams.owner}/${currentGithubParams.repo}/${currentGithubParams.branch}/${currentGithubParams.path}`;
+function getStorageKey(githubParams: GithubNotebookParams | null): string {
+  if (!githubParams) {
+    return "local";
+  }
+  return `github:${githubParams.owner}/${githubParams.repo}/${githubParams.branch}/${githubParams.path}`;
 }
 
 let notebookToSave: any | null = null;
 let notebookSaveScheduled = false;
-export function saveNotebookDebounced(notebook: any): void {
+export function saveNotebookToStorageDebounced(
+  notebook: any,
+  githubParams: GithubNotebookParams | null,
+): void {
   notebookToSave = notebook;
   if (!notebookSaveScheduled) {
     notebookSaveScheduled = true;
     setTimeout(() => {
-      saveNotebook(notebookToSave);
+      saveNotebookToStorage(notebookToSave, githubParams);
       notebookSaveScheduled = false;
     }, 1000);
   }
 }
 
-export async function saveNotebook(notebook: any): Promise<void> {
+export async function saveNotebookToStorage(
+  notebook: any,
+  githubParams: GithubNotebookParams | null,
+): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
+    console.log("--- saving notebook", notebook);
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey();
+    const storageKey = getStorageKey(githubParams);
     const request = store.put(notebook, storageKey);
 
     request.onerror = () => reject(request.error);
@@ -63,16 +67,18 @@ export async function saveNotebook(notebook: any): Promise<void> {
   });
 }
 
-export async function loadNotebook(): Promise<any | null> {
+export async function loadNotebookFromStorage(
+  githubParams: GithubNotebookParams | null,
+): Promise<any | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readonly");
     const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey();
+    const storageKey = getStorageKey(githubParams);
     const request = store.get(storageKey);
 
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result || null);
+    request.onsuccess = () => resolve(request.result);
   });
 }
 

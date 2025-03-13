@@ -7,22 +7,22 @@ import { GithubNotebookParams } from "../../shared/util/indexedDb";
 
 type HomePageProps = { width: number; height: number };
 
-const getGithubParamsFromUrl = (): GithubNotebookParams | undefined => {
+const getGithubParamsFromUrl = (): GithubNotebookParams | null => {
   const params = new URLSearchParams(window.location.search);
   const url = params.get("url");
-  if (!url) return undefined;
+  if (!url) return null;
 
   // Expected format: https://github.com/owner/repo/blob/branch/path/to/notebook.ipynb
   try {
     const githubUrl = new URL(url);
-    if (!githubUrl.hostname.includes("github.com")) return undefined;
+    if (!githubUrl.hostname.includes("github.com")) return null;
 
     const pathParts = githubUrl.pathname.split("/");
     // Remove empty first element
     pathParts.shift();
 
     // Need at least: [owner, repo, blob, branch, ...path]
-    if (pathParts.length < 5 || pathParts[2] !== "blob") return undefined;
+    if (pathParts.length < 5 || pathParts[2] !== "blob") return null;
 
     const owner = pathParts[0];
     const repo = pathParts[1];
@@ -31,13 +31,15 @@ const getGithubParamsFromUrl = (): GithubNotebookParams | undefined => {
 
     return { owner, repo, branch, path };
   } catch {
-    return undefined;
+    return null;
   }
 };
 
 const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [githubParams, setGithubParams] = useState<GithubNotebookParams>();
+  const [githubParams, setGithubParams] = useState<
+    GithubNotebookParams | null | undefined
+  >(undefined);
 
   // Initialize GitHub params from URL
   useEffect(() => {
@@ -53,6 +55,14 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
     window.addEventListener("popstate", handleUrlChange);
     return () => window.removeEventListener("popstate", handleUrlChange);
   }, []);
+
+  if (githubParams === undefined) {
+    return (
+      <Box>
+        <h1>Loading...</h1>
+      </Box>
+    );
+  }
 
   return (
     <JupyterConnectivityProvider mode="jupyter-server">

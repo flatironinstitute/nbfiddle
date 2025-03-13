@@ -25,7 +25,7 @@ type ToolbarProps = {
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
   onCancel?: () => void;
-  githubParams?: GithubNotebookParams;
+  githubParams: GithubNotebookParams | null;
   hasLocalChanges?: boolean;
   onResetToGithub?: () => void;
   onDownload?: () => void;
