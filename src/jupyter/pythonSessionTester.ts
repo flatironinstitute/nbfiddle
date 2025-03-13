@@ -17,8 +17,10 @@ export const testPythonSession = async (
   try {
     client.onOutputItem((item) => {
       if (
-        item.type === "stdout" &&
-        item.content.includes("Hello from Python!")
+        item.type === "iopub" &&
+        "name" in item.iopubMessage.content &&
+        item.iopubMessage.content.name === "stdout" &&
+        item.iopubMessage.content.text.includes("Hello from Python!")
       ) {
         outputReceived = true;
         testPassed = true;

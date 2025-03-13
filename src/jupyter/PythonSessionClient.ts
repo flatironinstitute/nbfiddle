@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { KernelManager, ServerConnection, Kernel } from "@jupyterlab/services";
 import { JupyterConnectivityState } from "./JupyterConnectivity";
+import { IIOPubMessage } from "@jupyterlab/services/lib/kernel/messages";
 
 export type PythonSessionStatus =
   | "idle"
@@ -18,19 +19,27 @@ export type PlotlyContent = {
 
 export type PythonSessionOutputItem =
   | {
-      type: "stdout" | "stderr";
-      content: string;
+      type: "iopub";
+      iopubMessage: IIOPubMessage;
     }
   | {
-      type: "image";
-      format: "png";
+      type: "system-error";
       content: string;
-    }
-  | {
-      type: "figure";
-      format: "plotly";
-      content: PlotlyContent;
-    }
+    };
+// | {
+//     type: "stdout" | "stderr";
+//     content: string;
+//   }
+// | {
+//     type: "image";
+//     format: "png";
+//     content: string;
+//   }
+// | {
+//     type: "figure";
+//     format: "plotly";
+//     content: PlotlyContent;
+//   }
 
 class PythonSessionClient {
   #onOutputItemCallbacks: ((item: PythonSessionOutputItem) => void)[] = [];
@@ -84,41 +93,45 @@ class PythonSessionClient {
       }
     };
 
-    const onIopubMessage = (_: any, msg: any) => {
-      console.log("iopub", msg);
-      if ("name" in msg.content) {
-        if (msg.content.name === "stdout" || msg.content.name === "stderr") {
-          const item: PythonSessionOutputItem = {
-            type: msg.content.name,
-            content: msg.content.text,
-          };
-          this._addOutputItem(item);
-        }
-      } else if ("traceback" in msg.content) {
-        const item: PythonSessionOutputItem = {
-          type: "stderr",
-          content: msg.content.traceback.join("\n") + "\n" + msg.content.evalue,
-        };
-        this._addOutputItem(item);
-      } else if ("data" in msg.content) {
-        if ("image/png" in msg.content.data) {
-          const item: PythonSessionOutputItem = {
-            type: "image",
-            format: "png",
-            content: msg.content.data["image/png"] as string,
-          };
-          this._addOutputItem(item);
-        } else if ("application/vnd.plotly.v1+json" in msg.content.data) {
-          const item: PythonSessionOutputItem = {
-            type: "figure",
-            format: "plotly",
-            content: msg.content.data[
-              "application/vnd.plotly.v1+json"
-            ] as PlotlyContent,
-          };
-          this._addOutputItem(item);
-        }
-      }
+    const onIopubMessage = (_: any, msg: IIOPubMessage) => {
+      this._addOutputItem({
+        type: "iopub",
+        iopubMessage: msg,
+      });
+      // console.log("iopub", msg);
+      // if ("name" in msg.content) {
+      //   if (msg.content.name === "stdout" || msg.content.name === "stderr") {
+      //     const item: PythonSessionOutputItem = {
+      //       type: msg.content.name,
+      //       content: msg.content.text,
+      //     };
+      //     this._addOutputItem(item);
+      //   }
+      // } else if ("traceback" in msg.content) {
+      //   const item: PythonSessionOutputItem = {
+      //     type: "stderr",
+      //     content: msg.content.traceback.join("\n") + "\n" + msg.content.evalue,
+      //   };
+      //   this._addOutputItem(item);
+      // } else if ("data" in msg.content) {
+      //   if ("image/png" in msg.content.data) {
+      //     const item: PythonSessionOutputItem = {
+      //       type: "image",
+      //       format: "png",
+      //       content: msg.content.data["image/png"] as string,
+      //     };
+      //     this._addOutputItem(item);
+      //   } else if ("application/vnd.plotly.v1+json" in msg.content.data) {
+      //     const item: PythonSessionOutputItem = {
+      //       type: "figure",
+      //       format: "plotly",
+      //       content: msg.content.data[
+      //         "application/vnd.plotly.v1+json"
+      //       ] as PlotlyContent,
+      //     };
+      //     this._addOutputItem(item);
+      //   }
+      // }
     };
 
     this.#onStatusChangedSlot = onStatusChanged;
@@ -205,7 +218,7 @@ class PythonSessionClient {
         ];
         for (const errMessage of errMessages) {
           const item: PythonSessionOutputItem = {
-            type: "stderr",
+            type: "system-error",
             content: errMessage,
           };
           this.#onOutputItemCallbacks.forEach((callback) => {
@@ -224,7 +237,7 @@ class PythonSessionClient {
     this.#onOutputItemCallbacks.push(callback);
     return () => {
       this.removeOnOutputItem(callback);
-    }
+    };
   }
   removeOnOutputItem(callback: (item: PythonSessionOutputItem) => void) {
     this.#onOutputItemCallbacks = this.#onOutputItemCallbacks.filter(
