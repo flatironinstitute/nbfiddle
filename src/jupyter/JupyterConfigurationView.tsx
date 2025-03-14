@@ -206,7 +206,7 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
                   size="small"
                   onClick={() => {
                     navigator.clipboard.writeText(
-                      `jupyter lab --NotebookApp.allow_origin='${originToAllow}' --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True" --no-browser --port=${jupyterServerUrl.split(":")[2] || "8888"}`,
+                      `jupyter lab --NotebookApp.allow_origin='${originToAllow}' --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True" --no-browser --port=${jupyterServerUrl.split(":")[2] || "8888"} --MappingKernelManager.cull_interval="300"`,
                     );
                   }}
                 >
@@ -227,6 +227,7 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
               jupyter lab --NotebookApp.allow_origin='{originToAllow}'
               --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True"
               --no-browser --port={jupyterServerUrl.split(":")[2] || "8888"}
+              --MappingKernelManager.cull_interval="300"
             </Box>
           </Stack>
           <Typography variant="body2" color="text.secondary" gutterBottom>
