@@ -83,9 +83,18 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
           <Tabs
             value={selectedTab}
             onChange={(_, newValue) => setSelectedTab(newValue)}
+            sx={{
+              minHeight: 36,
+              "& .MuiTab-root": {
+                minHeight: 36,
+                py: 0,
+                px: 0.5, // Minimal horizontal padding (4px)
+                minWidth: "auto", // Allow tabs to be more compact
+              },
+            }}
           >
             <Tab label="Notebook" />
-            <Tab label="Jupyter Configuration" />
+            <Tab label="Jupyter Config" />
             <Tab label="Settings" />
             <Tab label="About" />
           </Tabs>
@@ -93,12 +102,12 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
         <Box
           sx={{
             display: selectedTab === 0 ? "block" : "none",
-            height: "calc(100% - 48px)",
+            height: "calc(100% - 36px)",
           }}
         >
           <NotebookView
             width={width}
-            height={height - 48}
+            height={height - 36}
             githubParams={notebookParams.githubParams}
             localname={notebookParams.localname}
           />
@@ -106,26 +115,26 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
         <Box
           sx={{
             display: selectedTab === 1 ? "block" : "none",
-            height: "calc(100% - 48px)",
+            height: "calc(100% - 36px)",
           }}
         >
-          <JupyterConfigurationView width={width - 32} height={height - 48} />
+          <JupyterConfigurationView width={width - 32} height={height - 36} />
         </Box>
         <Box
           sx={{
             display: selectedTab === 2 ? "block" : "none",
-            height: "calc(100% - 48px)",
+            height: "calc(100% - 36px)",
           }}
         >
-          <SettingsView width={width} height={height - 48} />
+          <SettingsView width={width} height={height - 36} />
         </Box>
         <Box
           sx={{
             display: selectedTab === 3 ? "block" : "none",
-            height: "calc(100% - 48px)",
+            height: "calc(100% - 36px)",
           }}
         >
-          <AboutView width={width} height={height - 48} />
+          <AboutView width={width} height={height - 36} />
         </Box>
       </Box>
     </JupyterConnectivityProvider>
