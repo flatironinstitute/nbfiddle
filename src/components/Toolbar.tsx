@@ -179,7 +179,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               onClick={onToggleCellType}
               disabled={!onToggleCellType}
             >
-              {activeCellType === "code" ? <TextSnippetIcon /> : <CodeIcon />}
+              {activeCellType === "code" ? <CodeIcon /> : <TextSnippetIcon />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Restart Session">

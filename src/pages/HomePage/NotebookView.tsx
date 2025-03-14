@@ -189,15 +189,16 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         console.warn("Cell already executing");
         return;
       }
-      if (!sessionClient) {
-        console.warn("Python session client not available");
-        return;
-      }
       if (!activeCellId) return;
       const cell = notebook.cellMap.get(activeCellId);
       if (!cell) return;
+
       let newNotebook = notebook;
       if (cell.cell_type === "code") {
+        if (!sessionClient) {
+          console.warn("Python session client not available");
+          return;
+        }
         const codeCell = cell as ImmutableCodeCell;
 
         const newCodeCell = codeCell.set("outputs", emptyCodeCell.outputs);
@@ -221,6 +222,9 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
           canceledRef,
         );
 
+        dispatchExecution({ type: "end-execution", cellId: activeCellId });
+      } else if (cell.cell_type === "markdown") {
+        dispatchExecution({ type: "start-execution", cellId: activeCellId });
         dispatchExecution({ type: "end-execution", cellId: activeCellId });
       }
 
@@ -423,7 +427,8 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
                         userSelect: "none",
                       }}
                     >
-                      {cellId === activeCellId && cell.cell_type === "code" ? (
+                      {cellId === activeCellId &&
+                      (cell.cell_type === "markdown" || sessionClient) ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

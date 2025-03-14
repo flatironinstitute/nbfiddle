@@ -210,7 +210,7 @@ const flexibleJsonParse = (s: string) => {
     throw new Error("Invalid JSON");
   }
   return JSON.parse(s.substring(ind1, ind2 + 1));
-}
+};
 
 let codeCompletionsEnabled = false;
 export const setCodeCompletionsEnabled = (enabled: boolean) => {
