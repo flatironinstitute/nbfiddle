@@ -99,7 +99,10 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       const notebookData = await fetchGithubNotebook(githubParams);
       const reconstructedNotebook: ImmutableNotebook = fromJS(notebookData);
       setRemoteNotebook(reconstructedNotebook);
-      const localModifiedNotebook = await loadNotebookFromStorage(githubParams, localname);
+      const localModifiedNotebook = await loadNotebookFromStorage(
+        githubParams,
+        localname,
+      );
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
         localModifiedNotebook ? fromJS(localModifiedNotebook) : null;
       const notebook0 =

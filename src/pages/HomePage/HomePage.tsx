@@ -48,9 +48,9 @@ const getNotebookParamsFromUrl = (): NotebookParams => {
 
 const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [notebookParams, setNotebookParams] = useState<NotebookParams | undefined>(
-    undefined
-  );
+  const [notebookParams, setNotebookParams] = useState<
+    NotebookParams | undefined
+  >(undefined);
 
   // Initialize notebook params from URL
   useEffect(() => {

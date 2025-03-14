@@ -27,7 +27,10 @@ export async function openDb(): Promise<IDBDatabase> {
   });
 }
 
-function getStorageKey(githubParams: GithubNotebookParams | null, localname?: string): string {
+function getStorageKey(
+  githubParams: GithubNotebookParams | null,
+  localname?: string,
+): string {
   if (localname) {
     return `local:${localname}`;
   }
@@ -42,7 +45,7 @@ let notebookSaveScheduled = false;
 export function saveNotebookToStorageDebounced(
   notebook: any,
   githubParams: GithubNotebookParams | null,
-  localname?: string
+  localname?: string,
 ): void {
   notebookToSave = notebook;
   if (!notebookSaveScheduled) {
@@ -57,7 +60,7 @@ export function saveNotebookToStorageDebounced(
 export async function saveNotebookToStorage(
   notebook: any,
   githubParams: GithubNotebookParams | null,
-  localname?: string
+  localname?: string,
 ): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
@@ -74,7 +77,7 @@ export async function saveNotebookToStorage(
 
 export async function loadNotebookFromStorage(
   githubParams: GithubNotebookParams | null,
-  localname?: string
+  localname?: string,
 ): Promise<any | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {

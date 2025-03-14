@@ -173,10 +173,12 @@ class PythonSessionClient {
       kernel.statusChanged.disconnect(onStatusChanged);
       kernel.iopubMessage.disconnect(onIopubMessage);
       if (this.#kernelManager) {
-        this.#kernelManager.shutdownAll();
         this.#kernelManager.dispose();
-        this.#kernel = undefined;
         this.#kernelManager = undefined;
+      }
+      if (this.#kernel) {
+        await this.#kernel.shutdown();
+        this.#kernel = undefined;
       }
       throw err;
     }
@@ -188,9 +190,9 @@ class PythonSessionClient {
   async shutdown() {
     if (this.jupyterConnectivityState.mode === "jupyter-server") {
       if (this.#kernelManager) {
-        await this.#kernelManager.shutdownAll();
         await this.#kernelManager.dispose();
-      } else if (this.#kernel) {
+      }
+      if (this.#kernel) {
         await this.#kernel.shutdown();
       }
       this.#kernel = undefined;
