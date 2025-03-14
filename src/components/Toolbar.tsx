@@ -19,6 +19,9 @@ import { GithubNotebookParams } from "../shared/util/indexedDb";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DownloadIcon from "@mui/icons-material/Download";
+import CodeIcon from "@mui/icons-material/Code";
+import TextSnippetIcon from "@mui/icons-material/TextSnippet";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 type ToolbarProps = {
   executingCellId: string | null;
@@ -158,34 +161,45 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            size="small"
-            color="primary"
-            onClick={onDownload}
-            startIcon={<DownloadIcon />}
+          <Tooltip title="Download">
+            <IconButton size="small" color="primary" onClick={onDownload}>
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip
+            title={
+              activeCellType === "code"
+                ? "Convert to Markdown"
+                : "Convert to Code"
+            }
           >
-            Download
-          </Button>
-          <Button
-            size="small"
-            color="primary"
-            onClick={onToggleCellType}
-            disabled={!onToggleCellType}
-          >
-            {activeCellType === "code" ? "To Markdown" : "To Code"}
-          </Button>
-          <Button
-            size="small"
-            color="primary"
-            onClick={() => setRestartDialogOpen(true)}
-            disabled={!jupyterServerIsAvailable}
-          >
-            Restart Session
-          </Button>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={onToggleCellType}
+              disabled={!onToggleCellType}
+            >
+              {activeCellType === "code" ? <TextSnippetIcon /> : <CodeIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Restart Session">
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setRestartDialogOpen(true)}
+                disabled={!jupyterServerIsAvailable}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
           {executingCellId && onCancel && (
-            <Button size="small" color="error" onClick={onCancel}>
-              Cancel Execution
-            </Button>
+            <Tooltip title="Cancel Execution">
+              <IconButton size="small" color="error" onClick={onCancel}>
+                <CancelIcon />
+              </IconButton>
+            </Tooltip>
           )}
         </Box>
       </MuiToolbar>
