@@ -9,7 +9,10 @@ import {
   Stack,
   Card,
   CardContent,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useJupyterConnectivity, publicServers } from "./JupyterConnectivity";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import EditIcon from "@mui/icons-material/Edit";
@@ -179,36 +182,56 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
           <Typography variant="body2" color="text.secondary" paragraph>
             To run a local Jupyter server:
           </Typography>
-          <Box
-            component="pre"
-            sx={{
-              bgcolor: "background.paper",
-              p: 1.5,
-              borderRadius: 1,
-              overflowX: "auto",
-              fontSize: "0.8rem",
-              mb: 2,
-            }}
-          >
-            pip install jupyterlab
-          </Box>
+          <Stack spacing={1} sx={{ mb: 2 }}>
+            <Box
+              component="pre"
+              sx={{
+                bgcolor: "background.paper",
+                p: 2,
+                borderRadius: 1,
+                overflowX: "auto",
+                fontSize: "0.8rem",
+              }}
+            >
+              pip install jupyterlab
+            </Box>
+          </Stack>
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Then start Jupyter lab with:
           </Typography>
-          <Box
-            component="pre"
-            sx={{
-              bgcolor: "background.paper",
-              p: 1.5,
-              borderRadius: 1,
-              overflowX: "auto",
-              fontSize: "0.8rem",
-            }}
-          >
-            jupyter lab --NotebookApp.allow_origin='{originToAllow}'
-            --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True"
-            --no-browser --port={jupyterServerUrl.split(":")[2] || "8888"}
-          </Box>
+          <Stack spacing={1}>
+            <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+              <Tooltip title="Copy command">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `jupyter lab --NotebookApp.allow_origin='${originToAllow}' --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True" --no-browser --port=${jupyterServerUrl.split(":")[2] || "8888"}`,
+                    );
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Box
+              component="pre"
+              sx={{
+                bgcolor: "background.paper",
+                p: 2,
+                borderRadius: 1,
+                overflowX: "auto",
+                fontSize: "0.8rem",
+              }}
+            >
+              jupyter lab --NotebookApp.allow_origin='{originToAllow}'
+              --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True"
+              --no-browser --port={jupyterServerUrl.split(":")[2] || "8888"}
+            </Box>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Finally, update the above URL and optional token in the form above.
+          </Typography>
         </Paper>
 
         <Paper elevation={2} sx={{ mt: 3, p: 2 }}>
