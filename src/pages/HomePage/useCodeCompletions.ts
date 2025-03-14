@@ -16,6 +16,8 @@ const doCompletion = async (o: {
 }): Promise<string | undefined> => {
   const thisCompletionNum = completionNum + 1;
   completionNum = thisCompletionNum;
+  // always wait at least a little bit, to give a chance for more calls coming in
+  await new Promise((resolve) => setTimeout(resolve, 250));
   const elapsedSinceLastQuery = Date.now() - lastQueryCompletionTime;
   if (elapsedSinceLastQuery < 2000) {
     await new Promise((resolve) =>
@@ -26,7 +28,6 @@ const doCompletion = async (o: {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (thisCompletionNum !== completionNum) {
-    console.log("-- thisCompletionNum !== completionNum --");
     // something more recent came in
     return;
   }
