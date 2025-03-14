@@ -27,7 +27,10 @@ export async function openDb(): Promise<IDBDatabase> {
   });
 }
 
-function getStorageKey(githubParams: GithubNotebookParams | null): string {
+function getStorageKey(githubParams: GithubNotebookParams | null, localname?: string): string {
+  if (localname) {
+    return `local:${localname}`;
+  }
   if (!githubParams) {
     return "local";
   }
@@ -39,12 +42,13 @@ let notebookSaveScheduled = false;
 export function saveNotebookToStorageDebounced(
   notebook: any,
   githubParams: GithubNotebookParams | null,
+  localname?: string
 ): void {
   notebookToSave = notebook;
   if (!notebookSaveScheduled) {
     notebookSaveScheduled = true;
     setTimeout(() => {
-      saveNotebookToStorage(notebookToSave, githubParams);
+      saveNotebookToStorage(notebookToSave, githubParams, localname);
       notebookSaveScheduled = false;
     }, 1000);
   }
@@ -53,13 +57,14 @@ export function saveNotebookToStorageDebounced(
 export async function saveNotebookToStorage(
   notebook: any,
   githubParams: GithubNotebookParams | null,
+  localname?: string
 ): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     console.log("--- saving notebook", notebook);
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey(githubParams);
+    const storageKey = getStorageKey(githubParams, localname);
     const request = store.put(notebook, storageKey);
 
     request.onerror = () => reject(request.error);
@@ -69,12 +74,13 @@ export async function saveNotebookToStorage(
 
 export async function loadNotebookFromStorage(
   githubParams: GithubNotebookParams | null,
+  localname?: string
 ): Promise<any | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readonly");
     const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey(githubParams);
+    const storageKey = getStorageKey(githubParams, localname);
     const request = store.get(storageKey);
 
     request.onerror = () => reject(request.error);

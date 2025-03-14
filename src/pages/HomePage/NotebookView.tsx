@@ -41,16 +41,18 @@ import { checkNotebooksEqual } from "./notebook/notebook-utils";
 import { downloadNotebook } from "./notebook/notebookFileOperations";
 import { useSessionClient } from "./notebook/useSessionClient";
 
-type HomePageProps = {
+type NotebookViewProps = {
   width: number;
   height: number;
   githubParams: GithubNotebookParams | null;
+  localname?: string;
 };
 
-const NotebookView: FunctionComponent<HomePageProps> = ({
+const NotebookView: FunctionComponent<NotebookViewProps> = ({
   width,
   height,
   githubParams,
+  localname,
 }) => {
   const paperRef = useRef<HTMLDivElement>(null);
   const [notebook, setNotebook] = useState<ImmutableNotebook>(emptyNotebook);
@@ -97,7 +99,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
       const notebookData = await fetchGithubNotebook(githubParams);
       const reconstructedNotebook: ImmutableNotebook = fromJS(notebookData);
       setRemoteNotebook(reconstructedNotebook);
-      const localModifiedNotebook = await loadNotebookFromStorage(githubParams);
+      const localModifiedNotebook = await loadNotebookFromStorage(githubParams, localname);
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
         localModifiedNotebook ? fromJS(localModifiedNotebook) : null;
       const notebook0 =
@@ -129,7 +131,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
     if (githubParams) {
       loadGithubNotebook();
     } else {
-      loadNotebookFromStorage(githubParams)
+      loadNotebookFromStorage(githubParams, localname)
         .then((savedNotebook) => {
           if (savedNotebook) {
             const reconstructedNotebook = fromJS(savedNotebook);
@@ -148,7 +150,7 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
 
   // Save notebook on changes with debouncing
   useEffect(() => {
-    saveNotebookToStorageDebounced(toJS(notebook), githubParams);
+    saveNotebookToStorageDebounced(toJS(notebook), githubParams, localname);
   }, [notebook, githubParams]);
 
   const maxWidth = 1200;
@@ -156,8 +158,8 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
   const leftPadding = Math.max((width - notebookWidth) / 2, 24);
 
   const handleDownload = useCallback(() => {
-    downloadNotebook(notebook, githubParams);
-  }, [notebook, githubParams]);
+    downloadNotebook(notebook, githubParams, localname);
+  }, [notebook, githubParams, localname]);
 
   const jupyterConnectivityState = useJupyterConnectivity();
 

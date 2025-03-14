@@ -4,9 +4,10 @@ import { GithubNotebookParams } from "../../../shared/util/indexedDb";
 export const downloadNotebook = (
   notebook: ImmutableNotebook,
   githubParams: GithubNotebookParams | null,
+  localname?: string
 ) => {
   const notebookData = toJS(notebook);
-  const filename = githubParams ? githubParams.path : "Untitled.ipynb";
+  const filename = githubParams ? githubParams.path : localname ? `${localname}.ipynb` : "Untitled.ipynb";
   const blob = new Blob([JSON.stringify(notebookData, null, 2)], {
     type: "application/json",
   });
