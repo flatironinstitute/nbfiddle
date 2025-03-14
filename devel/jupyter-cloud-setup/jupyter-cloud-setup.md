@@ -100,8 +100,8 @@ conda activate nbfiddle
 
 Start jupyter lab
 
-jupyter lab --NotebookApp.allow_origin='https://nbfiddle.org' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0 --NotebookApp.allow_remote_access="True"
+jupyter lab --NotebookApp.allow_origin_pat='^(https://nbfiddle\.org|http://localhost:5173|https://neurosift.app)$' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0 --NotebookApp.allow_remote_access="True"
 
-Note the allow_remote_access flag
+Note the allow_remote_access flag and the allow_origin_pat flag
 
 Now test it out by going to https://jupyter1.nbfiddle.org - you'll need to put in the token
