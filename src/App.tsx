@@ -18,7 +18,7 @@ import {
 } from "react-router-dom";
 import HomePage from "./pages/HomePage/HomePage";
 import SettingsPage from "./pages/SettingsPage/SettingsPage";
-import { JupyterConnectivityProvider } from "./jupyter/JupyterConnectivity";
+import { JupyterConnectivityProvider } from "./jupyter/JupyterConnectivityProvider";
 
 const theme = createTheme({
   palette: {

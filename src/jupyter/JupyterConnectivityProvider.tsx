@@ -1,54 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  createContext,
   FunctionComponent,
   PropsWithChildren,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-
-export interface PublicServer {
-  name: string;
-  url: string;
-  description?: string;
-}
-
-export const publicServers: PublicServer[] = [
-  {
-    name: "jupyter1.nbfiddle.org",
-    url: "https://jupyter1.nbfiddle.org",
-    description: "Public server 1",
-  },
-];
-
-export type JupyterConnectivityState = {
-  mode: "jupyter-server" | "jupyterlab-extension";
-  jupyterServerUrl: string;
-  jupyterServerToken: string;
-  jupyterServerIsAvailable: boolean;
-  refreshJupyter: () => void;
-  changeJupyterServerUrl: () => void;
-  changeJupyterServerToken: () => void;
-  selectPublicServer: (server: PublicServer) => void;
-  extensionKernel?: any;
-  numActiveKernels: number;
-};
-
-const JupyterConnectivityContext = createContext<JupyterConnectivityState>({
-  mode: "jupyter-server",
-  jupyterServerUrl: "http://localhost:8888",
-  jupyterServerToken: "",
-  jupyterServerIsAvailable: false,
-  refreshJupyter: () => {},
-  changeJupyterServerUrl: () => {},
-  changeJupyterServerToken: () => {},
-  selectPublicServer: () => {},
-  extensionKernel: undefined,
-  numActiveKernels: 0,
-});
+import { PublicServer, publicServers } from "./publicServers";
+import {
+  JupyterConnectivityContext,
+  setTokenForPublicServer,
+  tokenForPublicServer,
+} from "./JupyterConnectivity";
 
 export const JupyterConnectivityProvider: FunctionComponent<
   PropsWithChildren<{
@@ -148,12 +112,17 @@ export const JupyterConnectivityProvider: FunctionComponent<
   const selectPublicServer = useCallback((server: PublicServer) => {
     localStorage.setItem("jupyter-server-url", server.url);
     localStorage.setItem("jupyter-server-name", server.name);
-    localStorage.setItem(
-      "jupyter-server-token",
-      tokenForPublicServer(server.name),
-    );
+    let t = tokenForPublicServer(server.name);
+    if (!t) {
+      const newToken = prompt("Enter the token for this public server");
+      if (!newToken) {
+        return;
+      }
+      t = newToken;
+    }
+    localStorage.setItem("jupyter-server-token", t);
     setJupyterServerUrl(server.url);
-    setJupyterServerToken(tokenForPublicServer(server.name));
+    setJupyterServerToken(t);
     setRefreshCode((c) => c + 1);
   }, []);
 
@@ -189,38 +158,4 @@ export const JupyterConnectivityProvider: FunctionComponent<
       {children}
     </JupyterConnectivityContext.Provider>
   );
-};
-
-export const tokenForPublicServer = (serverName: string) => {
-  try {
-    const publicServerTokens = localStorage.getItem("public-server-tokens");
-    if (publicServerTokens) {
-      const tokens = JSON.parse(publicServerTokens);
-      return tokens[serverName];
-    }
-  } catch (e) {
-    console.error("Failed to get public server token", e);
-  }
-  return "";
-};
-
-export const setTokenForPublicServer = (serverName: string, token: string) => {
-  try {
-    const publicServerTokens = localStorage.getItem("public-server-tokens");
-    const tokens = publicServerTokens ? JSON.parse(publicServerTokens) : {};
-    tokens[serverName] = token;
-    localStorage.setItem("public-server-tokens", JSON.stringify(tokens));
-  } catch (e) {
-    console.error("Failed to set public server token", e);
-  }
-};
-
-export const useJupyterConnectivity = () => {
-  const context = useContext(JupyterConnectivityContext);
-  if (!context) {
-    throw new Error(
-      "useJupyterConnectivity must be used within a JupyterConnectivityProvider",
-    );
-  }
-  return context;
 };

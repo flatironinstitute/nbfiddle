@@ -1,22 +1,23 @@
-import { FunctionComponent, useState } from "react";
-import ScrollY from "../components/ScrollY";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import EditIcon from "@mui/icons-material/Edit";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ScienceIcon from "@mui/icons-material/Science";
 import {
+  Alert,
   Box,
   Button,
-  Typography,
-  Alert,
-  Paper,
-  Stack,
   Card,
   CardContent,
   IconButton,
+  Paper,
+  Stack,
   Tooltip,
+  Typography,
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useJupyterConnectivity, publicServers } from "./JupyterConnectivity";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import EditIcon from "@mui/icons-material/Edit";
-import ScienceIcon from "@mui/icons-material/Science";
+import { FunctionComponent, useState } from "react";
+import ScrollY from "../components/ScrollY";
+import { useJupyterConnectivity } from "./JupyterConnectivity";
+import { publicServers } from "./publicServers";
 import { TestResult, testPythonSession } from "./pythonSessionTester";
 
 type JupyterViewProps = {

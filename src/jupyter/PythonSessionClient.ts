@@ -41,6 +41,44 @@ export type PythonSessionOutputItem =
 //     content: PlotlyContent;
 //   }
 
+let allKernelsStartedInThisBrowserSession: Kernel.IKernelConnection[] = [];
+
+window.addEventListener("beforeunload", () => {
+  // we cannot do an async shutdown here, but we can record this list of kernel IDs to localStorage so we can shut them down on next load
+  const kernelIds = allKernelsStartedInThisBrowserSession.map((k) => k.id);
+  let existingIdsToShutdown: string[] = [];
+  try {
+    const existingIdsToShutdownStr = localStorage.getItem(
+      "kernels-to-shutdown",
+    );
+    if (existingIdsToShutdownStr) {
+      existingIdsToShutdown = JSON.parse(existingIdsToShutdownStr);
+    }
+  } catch (e) {
+    console.error("Failed to parse existingIdsToShutdown", e);
+  }
+  existingIdsToShutdown = existingIdsToShutdown.concat(kernelIds);
+  try {
+    localStorage.setItem(
+      "kernels-to-shutdown",
+      JSON.stringify(existingIdsToShutdown),
+    );
+  } catch (e) {
+    console.error("Failed to set existingIdsToShutdown", e);
+  }
+});
+
+// now on next load, we can shutdown these kernels
+let existingKernelIdsToShutdown: string[] = [];
+try {
+  const existingIdsToShutdownStr = localStorage.getItem("kernels-to-shutdown");
+  if (existingIdsToShutdownStr) {
+    existingKernelIdsToShutdown = JSON.parse(existingIdsToShutdownStr);
+  }
+} catch (e) {
+  console.error("Failed to parse existingIdsToShutdown", e);
+}
+
 class PythonSessionClient {
   #onOutputItemCallbacks: ((item: PythonSessionOutputItem) => void)[] = [];
   #pythonSessionStatus: PythonSessionStatus = "uninitiated";
@@ -67,10 +105,24 @@ class PythonSessionClient {
         token: this.jupyterConnectivityState.jupyterServerToken,
       });
       kernelManager = new KernelManager({ serverSettings });
+      // check to see if we have any existing kernels to shutdown
+      for (const kernelId of existingKernelIdsToShutdown) {
+        try {
+          await kernelManager.shutdown(kernelId);
+        } catch (e) {
+          console.error("Failed to shutdown kernel", kernelId, e);
+        }
+      }
+      existingKernelIdsToShutdown = [];
+      localStorage.setItem(
+        "kernels-to-shutdown",
+        JSON.stringify(existingKernelIdsToShutdown),
+      );
       this.#kernelManager = kernelManager;
       kernel = await kernelManager.startNew({
         name: "python",
       });
+      allKernelsStartedInThisBrowserSession.push(kernel);
     } else if (this.jupyterConnectivityState.mode === "jupyterlab-extension") {
       if (!this.jupyterConnectivityState.extensionKernel) {
         throw Error(
@@ -178,6 +230,10 @@ class PythonSessionClient {
       }
       if (this.#kernel) {
         await this.#kernel.shutdown();
+        allKernelsStartedInThisBrowserSession =
+          allKernelsStartedInThisBrowserSession.filter(
+            (k) => k !== this.#kernel,
+          );
         this.#kernel = undefined;
       }
       throw err;
@@ -189,11 +245,15 @@ class PythonSessionClient {
   }
   async shutdown() {
     if (this.jupyterConnectivityState.mode === "jupyter-server") {
-      if (this.#kernelManager) {
-        await this.#kernelManager.dispose();
-      }
       if (this.#kernel) {
         await this.#kernel.shutdown();
+        allKernelsStartedInThisBrowserSession =
+          allKernelsStartedInThisBrowserSession.filter(
+            (k) => k !== this.#kernel,
+          );
+      }
+      if (this.#kernelManager) {
+        this.#kernelManager.dispose();
       }
       this.#kernel = undefined;
       this.#kernelManager = undefined;
@@ -211,25 +271,26 @@ class PythonSessionClient {
   }
   async runCode(code: string) {
     if (!this.#kernel) {
-      try {
-        console.info("initiating python session");
-        await this.initiate();
-      } catch (err: any) {
-        console.error("Error initiating", err);
-        const errMessages = [
-          "Error initiating python session. Configure your Jupyter connection in the Jupyter tab.",
-        ];
-        for (const errMessage of errMessages) {
-          const item: PythonSessionOutputItem = {
-            type: "system-error",
-            content: errMessage,
-          };
-          this.#onOutputItemCallbacks.forEach((callback) => {
-            callback(item);
-          });
-        }
-        return;
-      }
+      throw Error("Unexpected, no kernel in runCode");
+      // try {
+      //   console.info("initiating python session");
+      //   await this.initiate();
+      // } catch (err: any) {
+      //   console.error("Error initiating", err);
+      //   const errMessages = [
+      //     "Error initiating python session. Configure your Jupyter connection in the Jupyter tab.",
+      //   ];
+      //   for (const errMessage of errMessages) {
+      //     const item: PythonSessionOutputItem = {
+      //       type: "system-error",
+      //       content: errMessage,
+      //     };
+      //     this.#onOutputItemCallbacks.forEach((callback) => {
+      //       callback(item);
+      //     });
+      //   }
+      //   return;
+      // }
     }
     if (!this.#kernel) throw Error("Unexpected, no kernel");
     const future = this.#kernel.requestExecute({ code });

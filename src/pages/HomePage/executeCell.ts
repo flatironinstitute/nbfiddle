@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createImmutableOutput, ImmutableOutput } from "@nteract/commutable";
 import { List } from "immutable";
-import PythonSessionClient from "src/jupyter/PythonSessionClient";
+import PythonSessionClient from "../../jupyter/PythonSessionClient";
 
 const executeCell = async (
   code: string,
