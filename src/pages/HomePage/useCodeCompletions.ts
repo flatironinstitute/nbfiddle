@@ -194,13 +194,23 @@ const doQueryCompletion = async (o: {
     return undefined;
   }
   try {
-    const completionObj = JSON.parse(content);
+    const completionObj = flexibleJsonParse(content);
     return completionObj.completionOfCurrentLine;
   } catch {
     console.error("Error parsing completion:", content);
     return undefined;
   }
 };
+
+const flexibleJsonParse = (s: string) => {
+  // this handles for example when the AI returns ```json\n{...}\n``` instead of just {...}
+  const ind1 = s.indexOf("{");
+  const ind2 = s.lastIndexOf("}");
+  if (ind1 === -1 || ind2 === -1) {
+    throw new Error("Invalid JSON");
+  }
+  return JSON.parse(s.substring(ind1, ind2 + 1));
+}
 
 let codeCompletionsEnabled = false;
 export const setCodeCompletionsEnabled = (enabled: boolean) => {
