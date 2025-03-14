@@ -12,16 +12,23 @@ const AboutView: FunctionComponent<AboutViewProps> = ({ width, height }) => {
 
   useEffect(() => {
     // Fetch README content from the repo URL
-    fetch('https://raw.githubusercontent.com/magland/nbfiddle/main/README.md')
-      .then(response => response.text())
-      .then(content => {
+    fetch("https://raw.githubusercontent.com/magland/nbfiddle/main/README.md")
+      .then((response) => response.text())
+      .then((content) => {
         setReadmeContent(content);
       })
       .catch(console.error);
   }, []);
 
   return (
-    <Box sx={{ padding: 2, width: width - 32, height: height - 16, overflowY: 'auto' }}>
+    <Box
+      sx={{
+        padding: 2,
+        width: width - 32,
+        height: height - 16,
+        overflowY: "auto",
+      }}
+    >
       <ReactMarkdown>{readmeContent}</ReactMarkdown>
     </Box>
   );

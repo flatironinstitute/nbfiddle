@@ -6,6 +6,7 @@ import { Alert, Paper } from "@mui/material";
 import {
   appendCellToNotebook,
   emptyCodeCell,
+  emptyMarkdownCell,
   emptyNotebook,
   fromJS,
   ImmutableCodeCell,
@@ -253,6 +254,25 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
     }
   }, [activeCellId, notebook]);
 
+  const handleToggleCellType = useCallback(() => {
+    if (!activeCellId) return;
+    const cell = notebook.cellMap.get(activeCellId);
+    if (!cell) return;
+    // Create new cell of opposite type with same source
+    let newCell;
+    if (cell.cell_type === "code") {
+      newCell = emptyMarkdownCell
+        .set("source", cell.get("source"))
+        .set("metadata", cell.get("metadata"));
+    } else if (cell.cell_type === "markdown") {
+      newCell = emptyCodeCell
+        .set("source", cell.get("source"))
+        .set("metadata", cell.get("metadata"));
+    }
+    const newNotebook = notebook.setIn(["cellMap", activeCellId], newCell);
+    setNotebook(newNotebook);
+  }, [activeCellId, notebook]);
+
   const handleAddCellAfterActiveCell = useCallback(() => {
     if (!activeCellId) return;
     const { newNotebook, newCellId } = addCellAfterActiveCell(
@@ -301,6 +321,12 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
         hasLocalChanges={hasLocalChanges}
         onResetToGithub={resetToGithubVersion}
         onDownload={handleDownload}
+        activeCellType={
+          activeCellId
+            ? notebook.cellMap.get(activeCellId)?.get("cell_type", undefined)
+            : undefined
+        }
+        onToggleCellType={activeCellId ? handleToggleCellType : undefined}
       />
       <ScrollY width={width} height={height - 48}>
         <div style={{ padding: `24px ${leftPadding}px` }}>
@@ -338,128 +364,167 @@ const NotebookView: FunctionComponent<HomePageProps> = ({
               }
             }}
           >
-            {notebook.cellOrder.size === 0 ? (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  padding: "20px",
-                }}
-              >
-                <button
-                  onClick={() => {
-                    const newCodeCell = emptyCodeCell.set("source", "");
-                    const newNotebook = appendCellToNotebook(
-                      notebook,
-                      newCodeCell,
-                    );
-                    const newCellId = newNotebook.cellOrder.last() ?? null;
-                    setNotebook(newNotebook);
-                    if (newCellId) {
-                      setActiveCellId(newCellId);
-                      setCellIdRequiringFocus(newCellId);
-                    }
-                  }}
+            {notebook.cellOrder.map((cellId: string) => {
+              const cell = notebook.cellMap.get(cellId);
+              if (!cell) return null;
+              return (
+                <div
+                  key={cellId}
+                  data-cell-id={cellId}
                   style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#1976d2",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
+                    border:
+                      cellId === activeCellId
+                        ? "2px solid #1976d2"
+                        : "2px solid #f0f0f0",
+                    borderRadius: 4,
+                    padding: 8,
+                    marginBottom: 8,
+                  }}
+                  onClick={() => {
+                    setActiveCellId(cellId);
                   }}
                 >
-                  Add Code Cell
-                </button>
-              </div>
-            ) : (
-              notebook.cellOrder.map((cellId: string) => {
-                const cell = notebook.cellMap.get(cellId);
-                if (!cell) return null;
-                return (
-                  <div
-                    key={cellId}
-                    data-cell-id={cellId}
-                    style={{
-                      border:
-                        cellId === activeCellId
-                          ? "2px solid #1976d2"
-                          : "2px solid transparent",
-                      borderRadius: 4,
-                      padding: 8,
-                      marginBottom: 8,
-                    }}
-                    onClick={() => {
-                      setActiveCellId(cellId);
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "flex-start" }}>
-                      <div
-                        style={{
-                          width: "50px",
-                          textAlign: "right",
-                          paddingRight: "10px",
-                          fontFamily: "monospace",
-                          color: "#999",
-                          userSelect: "none",
-                        }}
-                      >
-                        {currentCellExecution.executingCellId === cellId
-                          ? "[*]:"
-                          : currentCellExecution.cellExecutionCounts[cellId]
-                            ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
-                            : " "}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        {cell.cell_type === "code" ? (
-                          <CodeCellView
-                            key={cellId}
-                            cell={cell}
-                            onShiftEnter={() =>
-                              handleExecute({ advance: true })
-                            }
-                            onCtrlEnter={() =>
-                              handleExecute({ advance: false })
-                            }
-                            onChange={(newCell: ImmutableCodeCell) => {
-                              const newNotebook = notebook.setIn(
-                                ["cellMap", cellId],
-                                newCell,
-                              );
-                              setNotebook(newNotebook);
-                            }}
-                            requiresFocus={
-                              cellId === activeCellId &&
-                              cellIdRequiringFocus === cellId
-                            }
-                          />
-                        ) : cell.cell_type === "markdown" ? (
-                          <MarkdownCellView
-                            key={cellId}
-                            cell={cell}
-                            onShiftEnter={() =>
-                              handleExecute({ advance: true })
-                            }
-                            onCtrlEnter={() =>
-                              handleExecute({ advance: false })
-                            }
-                            onChange={(newCell: ImmutableMarkdownCell) => {
-                              const newNotebook = notebook.setIn(
-                                ["cellMap", cellId],
-                                newCell,
-                              );
-                              setNotebook(newNotebook);
-                            }}
-                          />
-                        ) : (
-                          <div>Unsupported cell type: {cell.cell_type}</div>
-                        )}
-                      </div>
+                  <div style={{ display: "flex", alignItems: "flex-start" }}>
+                    <div
+                      style={{
+                        width: "50px",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        alignItems: "center",
+                        paddingRight: "10px",
+                        userSelect: "none",
+                      }}
+                    >
+                      {cellId === activeCellId && cell.cell_type === "code" ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExecute({ advance: true });
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 2,
+                            color: "#1976d2",
+                            fontSize: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                          title="Run cell and advance"
+                        >
+                          ▶
+                        </button>
+                      ) : (
+                        <div style={{ fontFamily: "monospace", color: "#999" }}>
+                          {currentCellExecution.executingCellId === cellId
+                            ? "[*]:"
+                            : currentCellExecution.cellExecutionCounts[cellId]
+                              ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
+                              : " "}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {cell.cell_type === "code" ? (
+                        <CodeCellView
+                          key={cellId}
+                          cell={cell}
+                          onShiftEnter={() => handleExecute({ advance: true })}
+                          onCtrlEnter={() => handleExecute({ advance: false })}
+                          onChange={(newCell: ImmutableCodeCell) => {
+                            const newNotebook = notebook.setIn(
+                              ["cellMap", cellId],
+                              newCell,
+                            );
+                            setNotebook(newNotebook);
+                          }}
+                          requiresFocus={
+                            cellId === activeCellId &&
+                            cellIdRequiringFocus === cellId
+                          }
+                        />
+                      ) : cell.cell_type === "markdown" ? (
+                        <MarkdownCellView
+                          key={cellId}
+                          cell={cell}
+                          onShiftEnter={() => handleExecute({ advance: true })}
+                          onCtrlEnter={() => handleExecute({ advance: false })}
+                          onChange={(newCell: ImmutableMarkdownCell) => {
+                            const newNotebook = notebook.setIn(
+                              ["cellMap", cellId],
+                              newCell,
+                            );
+                            setNotebook(newNotebook);
+                          }}
+                        />
+                      ) : (
+                        <div>Unsupported cell type: {cell.cell_type}</div>
+                      )}
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  const newCodeCell = emptyCodeCell.set("source", "");
+                  const newNotebook = appendCellToNotebook(
+                    notebook,
+                    newCodeCell,
+                  );
+                  const newCellId = newNotebook.cellOrder.last() ?? null;
+                  setNotebook(newNotebook);
+                  if (newCellId) {
+                    setActiveCellId(newCellId);
+                    setCellIdRequiringFocus(newCellId);
+                  }
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Add Code Cell
+              </button>
+              <button
+                onClick={() => {
+                  const newMarkdownCell = emptyMarkdownCell.set("source", "");
+                  const newNotebook = appendCellToNotebook(
+                    notebook,
+                    newMarkdownCell,
+                  );
+                  const newCellId = newNotebook.cellOrder.last() ?? null;
+                  setNotebook(newNotebook);
+                  if (newCellId) {
+                    setActiveCellId(newCellId);
+                    setCellIdRequiringFocus(newCellId);
+                  }
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Add Markdown Cell
+              </button>
+            </div>
           </Paper>
         </div>
       </ScrollY>

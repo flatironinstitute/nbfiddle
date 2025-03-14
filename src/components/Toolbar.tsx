@@ -29,6 +29,8 @@ type ToolbarProps = {
   hasLocalChanges?: boolean;
   onResetToGithub?: () => void;
   onDownload?: () => void;
+  activeCellType?: "code" | "markdown";
+  onToggleCellType?: () => void;
 };
 
 const Toolbar: FunctionComponent<ToolbarProps> = ({
@@ -40,6 +42,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   hasLocalChanges,
   onResetToGithub,
   onDownload,
+  activeCellType,
+  onToggleCellType,
 }) => {
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -161,6 +165,14 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             startIcon={<DownloadIcon />}
           >
             Download
+          </Button>
+          <Button
+            size="small"
+            color="primary"
+            onClick={onToggleCellType}
+            disabled={!onToggleCellType}
+          >
+            {activeCellType === "code" ? "To Markdown" : "To Code"}
           </Button>
           <Button
             size="small"

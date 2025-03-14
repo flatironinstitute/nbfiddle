@@ -18,7 +18,7 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
   onCtrlEnter,
   requiresFocus,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(cell.get("source") === "");
 
   const handleShiftEnter = () => {
     setIsEditing(false);
