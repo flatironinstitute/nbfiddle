@@ -44,3 +44,64 @@ jupyter lab --NotebookApp.allow_origin='https://nbfiddle.org' --NotebookApp.toke
 # important: --ip=0.0.0.0 allows the server to be accessed from outside the droplet
 
 Configure nbfiddle to use your server's url and token
+
+But this only works on localhost. We need https!
+
+So let's do this step by step.
+
+Log in as root
+
+apt-get install nginx -y
+
+Configure domain to point to the droplet's IP
+- For example jupyter1.nbfiddle.org
+- Add an A record to your domain's IP
+
+apt-get install certbot python3-certbot-nginx -y
+
+Make sure port 80 is open in the firewall on digital ocean
+- In firewall, allow incoming http and https traffic
+
+certbot --nginx -d jupyter1.nbfiddle.org
+
+Get the following message:
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/jupyter1.nbfiddle.org/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/jupyter1.nbfiddle.org/privkey.pem
+This certificate expires on 2025-06-12.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+nano /etc/nginx/sites-available/default
+
+Add the following in the server section for 443
+
+location / {
+    proxy_pass http://127.0.0.1:8888/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+}
+
+# to check
+nxing -t
+
+systemctl restart nginx
+
+
+Now let's go back and start the jupyer notebook
+
+Log in as anaconda
+
+tmux a -t jupyter
+
+conda activate nbfiddle
+
+Start jupyter lab
+
+jupyter lab --NotebookApp.allow_origin='https://nbfiddle.org' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0 --NotebookApp.allow_remote_access="True"
+
+Note the allow_remote_access flag
+
+Now test it out by going to https://jupyter1.nbfiddle.org - you'll need to put in the token

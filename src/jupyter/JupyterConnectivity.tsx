@@ -18,9 +18,9 @@ export interface PublicServer {
 
 export const publicServers: PublicServer[] = [
   {
-    name: "NBFiddle Cloud",
-    url: "http://165.227.178.51:8888",
-    description: "Public NBFiddle server (requires token)",
+    name: "jupyter1.nbfiddle.org",
+    url: "https://jupyter1.nbfiddle.org",
+    description: "Public server 1",
   },
 ];
 
