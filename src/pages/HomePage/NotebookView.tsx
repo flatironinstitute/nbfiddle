@@ -115,7 +115,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         `Failed to load notebook from GitHub: ${(error as Error).message}`,
       );
     }
-  }, [githubParams]);
+  }, [githubParams, localname]);
 
   const resetToGithubVersion = useCallback(() => {
     if (remoteNotebook) {
@@ -146,12 +146,12 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
           setLoadError("Failed to load saved notebook");
         });
     }
-  }, [githubParams, loadGithubNotebook]);
+  }, [githubParams, loadGithubNotebook, localname]);
 
   // Save notebook on changes with debouncing
   useEffect(() => {
     saveNotebookToStorageDebounced(toJS(notebook), githubParams, localname);
-  }, [notebook, githubParams]);
+  }, [notebook, githubParams, localname]);
 
   const maxWidth = 1200;
   const notebookWidth = Math.min(width - 48, maxWidth);
