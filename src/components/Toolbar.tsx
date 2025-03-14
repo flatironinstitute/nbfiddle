@@ -67,13 +67,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     if (sessionClient) {
       return {
         color: "#4caf50",
-        text: "Connected to session",
+        text: "Connected to kernel",
       };
     }
     if (jupyterServerIsAvailable) {
       return {
         color: "#ff9800",
-        text: "Jupyter server available - click Restart Session to connect",
+        text: "Jupyter server available - click Restart Kernel to connect",
       };
     }
     return {
@@ -98,7 +98,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
       >
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: 2, flexGrow: 1 }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            flexGrow: 1,
+            userSelect: "none",
+          }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -161,7 +167,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Download">
+          <Tooltip title="Download as .ipynb">
             <IconButton size="small" color="primary" onClick={onDownload}>
               <DownloadIcon />
             </IconButton>
@@ -182,7 +188,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               {activeCellType === "code" ? <CodeIcon /> : <TextSnippetIcon />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Restart Session">
+          <Tooltip title="Restart Kernel">
             <span>
               <IconButton
                 size="small"
@@ -209,7 +215,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         onClose={() => setRestartDialogOpen(false)}
         aria-labelledby="restart-dialog-title"
       >
-        <DialogTitle id="restart-dialog-title">Restart Session?</DialogTitle>
+        <DialogTitle id="restart-dialog-title">Restart Kernel?</DialogTitle>
         <DialogContent>
           This will clear all kernel state. Any variables or imports in your
           current session will be lost.
