@@ -113,7 +113,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
         </Box>
         <Box
           sx={{
-            display: selectedTab === 3 ? "block" : "none",
+            display: selectedTab === 2 ? "block" : "none",
             height: "calc(100% - 48px)",
           }}
         >
@@ -121,7 +121,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
         </Box>
         <Box
           sx={{
-            display: selectedTab === 2 ? "block" : "none",
+            display: selectedTab === 3 ? "block" : "none",
             height: "calc(100% - 48px)",
           }}
         >
