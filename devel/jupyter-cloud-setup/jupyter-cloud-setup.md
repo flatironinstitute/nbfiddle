@@ -31,16 +31,16 @@ Choose a secret token
 export JUPYTER_TOKEN="yoursecrettoken"
 And add it to your .bashrc
 
+Start a tmux session
+- cond
+- later to attache: tmux a -t jupyter
+
+conda activate nbfiddle
+
 Start jupyter lab
 
-jupyter lab --NotebookApp.allow_origin='http://localhost:5173' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0
+jupyter lab --NotebookApp.allow_origin='https://nbfiddle.org' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0
 
 # important: --ip=0.0.0.0 allows the server to be accessed from outside the droplet
 
 Configure nbfiddle to use your server's url and token
-
-
-
-
-
-

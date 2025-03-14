@@ -50,7 +50,13 @@ const AppContent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { width, height } = useWindowDimensions();
-  const hideAppBar = searchParams.get("embedded") === "1";
+  let hideAppBar = searchParams.get("embedded") === "1";
+
+  // for now let's always hide the app bar
+  // because it's not used for anything
+  // we don't use the settings page, etc
+  hideAppBar = true;
+
   const appBarHeight = hideAppBar ? 0 : 50; // hard-coded to match the height of the AppBar
   const mainHeight = height - appBarHeight;
   return (

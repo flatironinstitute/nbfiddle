@@ -94,7 +94,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height: "calc(100% - 48px)",
           }}
         >
-          <JupyterConfigurationView width={width} height={height - 48} />
+          <JupyterConfigurationView width={width - 32} height={height - 48} />
         </Box>
       </Box>
     </JupyterConnectivityProvider>
