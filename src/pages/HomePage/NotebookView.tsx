@@ -40,6 +40,14 @@ import { executionReducer } from "./notebook/notebook-execution";
 import { checkNotebooksEqual } from "./notebook/notebook-utils";
 import { downloadNotebook } from "./notebook/notebookFileOperations";
 import { useSessionClient } from "./notebook/useSessionClient";
+import useCodeCompletions, {
+  setCodeCompletionsEnabled,
+  setSpecialContextForAI,
+} from "./useCodeCompletions";
+
+setCodeCompletionsEnabled(
+  localStorage.getItem("codeCompletionsEnabled") === "1",
+);
 
 type NotebookViewProps = {
   width: number;
@@ -177,7 +185,6 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   const handleExecute = useCallback(
     async ({ advance }: { advance: boolean }) => {
-      console.log("--- handleExecute");
       if (currentCellExecution.executingCellId) {
         console.warn("Cell already executing");
         return;
@@ -307,6 +314,22 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     setNotebook(newNotebook);
     setActiveCellId(newActiveCellId);
   }, [activeCellId, notebook]);
+
+  useEffect(() => {
+    // All code in cells leading up to the active cell
+    let codeCells = "";
+    for (const cellId of notebook.cellOrder) {
+      if (cellId === activeCellId) break;
+      const cell = notebook.cellMap.get(cellId);
+      if (!cell) continue;
+      if (cell.cell_type === "code") {
+        codeCells += cell.get("source") + "\n\n";
+      }
+    }
+    setSpecialContextForAI(codeCells);
+  }, [notebook, activeCellId]);
+
+  useCodeCompletions();
 
   return (
     <>

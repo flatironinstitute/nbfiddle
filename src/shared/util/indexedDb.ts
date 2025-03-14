@@ -64,7 +64,6 @@ export async function saveNotebookToStorage(
 ): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
-    console.log("--- saving notebook", notebook);
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
     const storageKey = getStorageKey(githubParams, localname);

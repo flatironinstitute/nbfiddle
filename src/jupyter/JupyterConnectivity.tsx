@@ -79,11 +79,9 @@ export const JupyterConnectivityProvider: FunctionComponent<
         const headers: { [key: string]: string } = {
           "Content-Type": "application/json",
         };
-        console.log("--- jupyterServerToken ---", jupyterServerToken);
         if (jupyterServerToken) {
           headers["Authorization"] = `token ${jupyterServerToken}`;
         }
-        console.log("--- headers ---", headers);
         const resp = await fetch(`${jupyterServerUrl}/api/kernels`, {
           method: "GET",
           // apparently it's import to specify the header here, otherwise it seems the header fields can violate CORS

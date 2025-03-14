@@ -4,6 +4,7 @@ import NotebookView from "./NotebookView";
 import { JupyterConnectivityProvider } from "../../jupyter/JupyterConnectivity";
 import JupyterConfigurationView from "../../jupyter/JupyterConfigurationView";
 import AboutView from "./AboutView";
+import SettingsView from "./SettingsView";
 import { GithubNotebookParams } from "../../shared/util/indexedDb";
 
 type HomePageProps = { width: number; height: number };
@@ -86,6 +87,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             <Tab label="Notebook" />
             <Tab label="Jupyter Configuration" />
             <Tab label="About" />
+            <Tab label="Settings" />
           </Tabs>
         </Box>
         <Box
@@ -116,6 +118,14 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
           }}
         >
           <AboutView width={width} height={height - 48} />
+        </Box>
+        <Box
+          sx={{
+            display: selectedTab === 3 ? "block" : "none",
+            height: "calc(100% - 48px)",
+          }}
+        >
+          <SettingsView width={width} height={height - 48} />
         </Box>
       </Box>
     </JupyterConnectivityProvider>
