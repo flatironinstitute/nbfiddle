@@ -64,6 +64,7 @@ class PythonSessionClient {
       }
       const serverSettings = ServerConnection.makeSettings({
         baseUrl: this.jupyterConnectivityState.jupyterServerUrl,
+        token: this.jupyterConnectivityState.jupyterServerToken,
       });
       kernelManager = new KernelManager({ serverSettings });
       this.#kernelManager = kernelManager;

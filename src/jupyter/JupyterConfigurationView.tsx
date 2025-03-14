@@ -21,6 +21,7 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
     jupyterServerIsAvailable,
     refreshJupyter,
     changeJupyterServerUrl,
+    changeJupyterServerToken,
     numActiveKernels,
   } = jupyterConnectivity;
 
@@ -96,6 +97,15 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
             onClick={changeJupyterServerUrl}
           >
             Change Server URL
+          </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            size="small"
+            startIcon={<EditIcon />}
+            onClick={changeJupyterServerToken}
+          >
+            Change Server Token
           </Button>
           <Button
             fullWidth

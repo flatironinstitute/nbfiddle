@@ -13,9 +13,11 @@ import {
 export type JupyterConnectivityState = {
   mode: "jupyter-server" | "jupyterlab-extension";
   jupyterServerUrl: string;
+  jupyterServerToken: string;
   jupyterServerIsAvailable: boolean;
   refreshJupyter: () => void;
   changeJupyterServerUrl: () => void;
+  changeJupyterServerToken: () => void;
   extensionKernel?: any;
   numActiveKernels: number;
 };
@@ -23,9 +25,11 @@ export type JupyterConnectivityState = {
 const JupyterConnectivityContext = createContext<JupyterConnectivityState>({
   mode: "jupyter-server",
   jupyterServerUrl: "http://localhost:8888",
+  jupyterServerToken: "",
   jupyterServerIsAvailable: false,
   refreshJupyter: () => {},
   changeJupyterServerUrl: () => {},
+  changeJupyterServerToken: () => {},
   extensionKernel: undefined,
   numActiveKernels: 0,
 });
@@ -37,10 +41,12 @@ export const JupyterConnectivityProvider: FunctionComponent<
   }>
 > = ({ children, mode, extensionKernel }) => {
   const [jupyterServerUrl, setJupyterServerUrl] = useState("");
+  const [jupyterServerToken, setJupyterServerToken] = useState("");
   useEffect(() => {
     const localStorageKey = "jupyter-server-url";
     const storedJupyterServerUrl = localStorage.getItem(localStorageKey);
     setJupyterServerUrl(storedJupyterServerUrl || "http://localhost:8888");
+    setJupyterServerToken(localStorage.getItem("jupyter-server-token") || "");
   }, []);
   const [jupyterServerIsAvailable, setJupyterServerIsAvailable] =
     useState(false);
@@ -49,12 +55,18 @@ export const JupyterConnectivityProvider: FunctionComponent<
     if (mode === "jupyter-server") {
       try {
         console.log(`Fetching ${jupyterServerUrl}/api/kernels`);
+        const headers: { [key: string]: string } = {
+          "Content-Type": "application/json",
+        };
+        console.log("--- jupyterServerToken ---", jupyterServerToken);
+        if (jupyterServerToken) {
+          headers["Authorization"] = `token ${jupyterServerToken}`;
+        }
+        console.log("--- headers ---", headers);
         const resp = await fetch(`${jupyterServerUrl}/api/kernels`, {
           method: "GET",
           // apparently it's import to specify the header here, otherwise it seems the header fields can violate CORS
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
         });
         if (resp.ok) {
           const kernels = await resp.json();
@@ -70,11 +82,11 @@ export const JupyterConnectivityProvider: FunctionComponent<
     } else if (mode === "jupyterlab-extension") {
       setJupyterServerIsAvailable(!!extensionKernel);
     }
-  }, [jupyterServerUrl, mode, extensionKernel]);
+  }, [jupyterServerUrl, jupyterServerToken, mode, extensionKernel]);
   const [refreshCode, setRefreshCode] = useState(0);
   useEffect(() => {
     check();
-  }, [check, refreshCode, jupyterServerUrl]);
+  }, [check, refreshCode, jupyterServerUrl, jupyterServerToken]);
   const refreshJupyter = useCallback(() => setRefreshCode((c) => c + 1), []);
   const changeJupyterServerUrl = useCallback(() => {
     const newUrl = prompt(
@@ -87,22 +99,37 @@ export const JupyterConnectivityProvider: FunctionComponent<
       setRefreshCode((c) => c + 1);
     }
   }, [jupyterServerUrl]);
+  const changeJupyterServerToken = useCallback(() => {
+    const newToken = prompt(
+      "Enter the token of your Jupyter runtime",
+      jupyterServerToken,
+    );
+    if (newToken) {
+      localStorage.setItem("jupyter-server-token", newToken);
+      setJupyterServerToken(newToken);
+      setRefreshCode((c) => c + 1);
+    }
+  }, [jupyterServerToken]);
   const value = useMemo(
     () => ({
       mode,
       jupyterServerUrl,
+      jupyterServerToken,
       jupyterServerIsAvailable,
       refreshJupyter,
       changeJupyterServerUrl,
+      changeJupyterServerToken,
       extensionKernel,
       numActiveKernels,
     }),
     [
       mode,
       jupyterServerUrl,
+      jupyterServerToken,
       jupyterServerIsAvailable,
       refreshJupyter,
       changeJupyterServerUrl,
+      changeJupyterServerToken,
       extensionKernel,
       numActiveKernels,
     ],
@@ -122,23 +149,4 @@ export const useJupyterConnectivity = () => {
     );
   }
   return context;
-};
-
-// This is important inside a hook where we don't want to depend on a state variable for the jupyter connectivity state
-export const loadJupyterConnectivityStateFromLocalStorage = (
-  mode: "jupyter-server" | "jupyterlab-extension",
-  extensionKernel?: any,
-  jupyterServerIsAvailable: boolean = false,
-): JupyterConnectivityState => {
-  const localStorageKey = "jupyter-server-url";
-  const storedJupyterServerUrl = localStorage.getItem(localStorageKey);
-  return {
-    mode,
-    jupyterServerUrl: storedJupyterServerUrl || "http://localhost:8888",
-    jupyterServerIsAvailable,
-    refreshJupyter: () => {},
-    changeJupyterServerUrl: () => {},
-    extensionKernel,
-    numActiveKernels: 0,
-  };
 };
