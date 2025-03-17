@@ -9,6 +9,7 @@ interface CodeCellViewProps {
   onShiftEnter: () => void;
   onCtrlEnter: () => void;
   requiresFocus?: boolean;
+  onFocus?: () => void;
 }
 
 const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
@@ -17,6 +18,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
   onShiftEnter,
   onCtrlEnter,
   requiresFocus,
+  onFocus,
 }) => {
   return (
     <div
@@ -33,6 +35,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
         onShiftEnter={onShiftEnter}
         onCtrlEnter={onCtrlEnter}
         requiresFocus={requiresFocus}
+        onFocus={onFocus}
       />
       {cell.outputs.size > 0 && (
         <div

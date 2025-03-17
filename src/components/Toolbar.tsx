@@ -1,3 +1,8 @@
+import CancelIcon from "@mui/icons-material/Cancel";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DownloadIcon from "@mui/icons-material/Download";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   AppBar,
   Box,
@@ -12,19 +17,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { ImmutableNotebook } from "@nteract/commutable";
 import { FunctionComponent, useState } from "react";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../shared/util/indexedDb";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import DownloadIcon from "@mui/icons-material/Download";
-import CodeIcon from "@mui/icons-material/Code";
-import TextSnippetIcon from "@mui/icons-material/TextSnippet";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudSaveDialog from "./CloudSaveDialog";
-import { ImmutableNotebook } from "@nteract/commutable";
 
 type ToolbarProps = {
   executingCellId: string | null;
@@ -35,8 +33,6 @@ type ToolbarProps = {
   hasLocalChanges?: boolean;
   onResetToRemote?: () => void;
   onDownload?: () => void;
-  activeCellType?: "code" | "markdown";
-  onToggleCellType?: () => void;
   onUpdateGist: (token: string) => Promise<void>;
   onSaveGist: (token: string, fileName: string) => Promise<void>;
   notebook: ImmutableNotebook;
@@ -51,8 +47,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   hasLocalChanges,
   onResetToRemote,
   onDownload,
-  activeCellType,
-  onToggleCellType,
   onUpdateGist,
   onSaveGist,
   notebook,
@@ -202,22 +196,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           <Tooltip title="Download as .ipynb">
             <IconButton size="small" color="primary" onClick={onDownload}>
               <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip
-            title={
-              activeCellType === "code"
-                ? "Convert to Markdown"
-                : "Convert to Code"
-            }
-          >
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={onToggleCellType}
-              disabled={!onToggleCellType}
-            >
-              {activeCellType === "code" ? <CodeIcon /> : <TextSnippetIcon />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Restart Kernel">

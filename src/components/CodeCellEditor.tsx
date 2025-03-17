@@ -9,6 +9,7 @@ type CodeCellEditorProps = {
   onShiftEnter: () => void;
   onCtrlEnter: () => void;
   requiresFocus?: boolean;
+  onFocus?: () => void;
 };
 
 const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
@@ -17,6 +18,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
   onShiftEnter,
   onCtrlEnter,
   requiresFocus,
+  onFocus,
 }) => {
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -35,32 +37,39 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
     onCtrlEnterRef.current = onCtrlEnter;
   }, [onShiftEnter, onCtrlEnter]);
 
-  const handleEditorMount: OnMount = useCallback((editor) => {
-    // we need to disable the default behavior of the editor for the following key commands:
-    // - Shift + Enter
-    // - Ctrl + Enter
-    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-      onShiftEnterRef.current();
-    });
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      onCtrlEnterRef.current();
-    });
+  const handleEditorMount: OnMount = useCallback(
+    (editor) => {
+      // we need to disable the default behavior of the editor for the following key commands:
+      // - Shift + Enter
+      // - Ctrl + Enter
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        onShiftEnterRef.current();
+      });
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        onCtrlEnterRef.current();
+      });
 
-    editor.onKeyDown((event) => {
-      // do not propagate special key events such as "a" and "b"
-      if (
-        [
-          monaco.KeyCode.KeyA,
-          monaco.KeyCode.KeyB,
-          monaco.KeyCode.KeyX,
-        ].includes(event.keyCode)
-      ) {
-        event.stopPropagation();
-      }
-    });
+      editor.onKeyDown((event) => {
+        // do not propagate special key events such as "a" and "b"
+        if (
+          [
+            monaco.KeyCode.KeyA,
+            monaco.KeyCode.KeyB,
+            monaco.KeyCode.KeyX,
+          ].includes(event.keyCode)
+        ) {
+          event.stopPropagation();
+        }
+      });
 
-    editorRef.current = editor;
-  }, []);
+      editor.onDidFocusEditorWidget(() => {
+        onFocus?.();
+      });
+
+      editorRef.current = editor;
+    },
+    [onFocus],
+  );
 
   useEffect(() => {
     if (requiresFocus) {

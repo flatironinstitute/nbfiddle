@@ -135,8 +135,8 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
               "& .MuiTab-root": {
                 minHeight: 36,
                 py: 0,
-                px: 0.5, // Minimal horizontal padding (4px)
-                minWidth: "auto", // Allow tabs to be more compact
+                px: 1.5,
+                minWidth: "auto",
               },
             }}
           >

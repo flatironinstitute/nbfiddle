@@ -1,32 +1,27 @@
 import {
-  ImmutableNotebook,
+  deleteCell,
   emptyCodeCell,
+  ImmutableNotebook,
   insertCellAfter,
   insertCellAt,
-  deleteCell,
 } from "@nteract/commutable";
 import { makeRandomId } from "./notebook-utils";
 
-export const addCellAfterActiveCell = (
+export const addCellAfterCell = (
   notebook: ImmutableNotebook,
-  activeCellId: string,
+  cellId: string,
 ): { newNotebook: ImmutableNotebook; newCellId: string } => {
   const newId = makeRandomId();
   const newCodeCell = emptyCodeCell.set("source", "");
-  const newNotebook = insertCellAfter(
-    notebook,
-    newCodeCell,
-    newId,
-    activeCellId,
-  );
+  const newNotebook = insertCellAfter(notebook, newCodeCell, newId, cellId);
   return { newNotebook, newCellId: newId };
 };
 
-export const addCellBeforeActiveCell = (
+export const addCellBeforeCell = (
   notebook: ImmutableNotebook,
-  activeCellId: string,
+  cellId: string,
 ): { newNotebook: ImmutableNotebook; newCellId: string } | undefined => {
-  const index = notebook.cellOrder.indexOf(activeCellId);
+  const index = notebook.cellOrder.indexOf(cellId);
   if (index === -1) return undefined;
 
   const newId = makeRandomId();
@@ -44,6 +39,8 @@ export const deleteActiveCell = (
     return { newNotebook: notebook, newActiveCellId: undefined };
 
   const newNotebook = deleteCell(notebook, activeCellId);
-  const newActiveCellId = newNotebook.cellOrder.get(Math.max(0, index - 1));
+  const newActiveCellId = newNotebook.cellOrder.get(
+    Math.min(newNotebook.cellOrder.size - 1, index),
+  );
   return { newNotebook, newActiveCellId };
 };
