@@ -19,14 +19,15 @@ import {
   FunctionComponent,
   useCallback,
   useEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
 } from "react";
 import { useJupyterConnectivity } from "../../jupyter/JupyterConnectivity";
 import {
-  fetchGithubNotebook,
-  GithubNotebookParams,
+  fetchNotebook,
+  ParsedUrlParams,
   loadNotebookFromStorage,
   saveNotebookToStorageDebounced,
 } from "../../shared/util/indexedDb";
@@ -44,6 +45,10 @@ import useCodeCompletions, {
   setCodeCompletionsEnabled,
   setSpecialContextForAI,
 } from "./useCodeCompletions";
+import saveAsGitHubGist, {
+  updateGitHubGist,
+} from "../../gists/saveAsGitHubGist";
+import { useNavigate } from "react-router-dom";
 
 setCodeCompletionsEnabled(
   localStorage.getItem("codeCompletionsEnabled") === "1",
@@ -52,18 +57,21 @@ setCodeCompletionsEnabled(
 type NotebookViewProps = {
   width: number;
   height: number;
-  githubParams: GithubNotebookParams | null;
+  parsedUrlParams: ParsedUrlParams | null;
   localname?: string;
 };
 
 const NotebookView: FunctionComponent<NotebookViewProps> = ({
   width,
   height,
-  githubParams,
+  parsedUrlParams,
   localname,
 }) => {
   const paperRef = useRef<HTMLDivElement>(null);
   const [notebook, setNotebook] = useState<ImmutableNotebook>(emptyNotebook);
+  const [remoteNotebookFilePath, setRemoteNotebookFilePath] = useState<
+    string | null
+  >(null);
   const [remoteNotebook, setRemoteNotebook] =
     useState<ImmutableNotebook | null>(null);
   const [loadError, setLoadError] = useState<string>();
@@ -73,6 +81,8 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   const [cellIdRequiringFocus, setCellIdRequiringFocus] = useState<
     string | null
   >(null);
+
+  const navigate = useNavigate();
 
   // Scroll active cell into view when it changes
   useEffect(() => {
@@ -100,15 +110,17 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   const hasLocalChanges = useHasLocalChanges(notebook, remoteNotebook);
 
-  const loadGithubNotebook = useCallback(async () => {
-    if (!githubParams) return;
+  const loadRemoteNotebook = useCallback(async () => {
+    if (!parsedUrlParams) return;
     try {
       setLoadError(undefined);
-      const notebookData = await fetchGithubNotebook(githubParams);
+      const { notebookContent: notebookData, filePath: notebookFilePath } =
+        await fetchNotebook(parsedUrlParams);
       const reconstructedNotebook: ImmutableNotebook = fromJS(notebookData);
       setRemoteNotebook(reconstructedNotebook);
+      setRemoteNotebookFilePath(notebookFilePath);
       const localModifiedNotebook = await loadNotebookFromStorage(
-        githubParams,
+        parsedUrlParams,
         localname,
       );
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
@@ -121,14 +133,14 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         setActiveCellId(notebook0.cellOrder.first());
       }
     } catch (error) {
-      console.error("Error loading GitHub notebook:", error);
+      console.error("Error loading GitHub or Gist notebook:", error);
       setLoadError(
-        `Failed to load notebook from GitHub: ${(error as Error).message}`,
+        `Failed to load notebook from GitHub or Gist: ${(error as Error).message}`,
       );
     }
-  }, [githubParams, localname]);
+  }, [parsedUrlParams, localname]);
 
-  const resetToGithubVersion = useCallback(() => {
+  const resetToRemoteVersion = useCallback(() => {
     if (remoteNotebook) {
       setNotebook(remoteNotebook);
       if (remoteNotebook.cellOrder.size > 0) {
@@ -139,10 +151,10 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   // Load saved notebook on mount or when GitHub params change
   useEffect(() => {
-    if (githubParams) {
-      loadGithubNotebook();
+    if (parsedUrlParams) {
+      loadRemoteNotebook();
     } else {
-      loadNotebookFromStorage(githubParams, localname)
+      loadNotebookFromStorage(parsedUrlParams, localname)
         .then((savedNotebook) => {
           if (savedNotebook) {
             const reconstructedNotebook = fromJS(savedNotebook);
@@ -157,20 +169,20 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
           setLoadError("Failed to load saved notebook");
         });
     }
-  }, [githubParams, loadGithubNotebook, localname]);
+  }, [parsedUrlParams, loadRemoteNotebook, localname]);
 
   // Save notebook on changes with debouncing
   useEffect(() => {
-    saveNotebookToStorageDebounced(toJS(notebook), githubParams, localname);
-  }, [notebook, githubParams, localname]);
+    saveNotebookToStorageDebounced(toJS(notebook), parsedUrlParams, localname);
+  }, [notebook, parsedUrlParams, localname]);
 
   const maxWidth = 1200;
   const notebookWidth = Math.min(width - 48, maxWidth);
   const leftPadding = Math.max((width - notebookWidth) / 2, 24);
 
   const handleDownload = useCallback(() => {
-    downloadNotebook(notebook, githubParams, localname);
-  }, [notebook, githubParams, localname]);
+    downloadNotebook(notebook, localname, remoteNotebookFilePath);
+  }, [notebook, localname, remoteNotebookFilePath]);
 
   const jupyterConnectivityState = useJupyterConnectivity();
 
@@ -335,6 +347,49 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   useCodeCompletions();
 
+  const handleSaveGist = useMemo(
+    () => async (token: string, fileName: string) => {
+      const gistUri = await saveAsGitHubGist(
+        {
+          [fileName]: JSON.stringify(toJS(notebook), null, 2),
+        },
+        {
+          defaultDescription: "Notebook saved from nbfiddle",
+          personalAccessToken: token,
+        },
+      );
+      setRemoteNotebook(fromJS(toJS(notebook)));
+      // replace special characters with "-"
+      const morphedFileName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
+      navigate(`?url=${gistUri}%23file-${morphedFileName}`);
+    },
+    [notebook, navigate],
+  );
+
+  const handleUpdateGist = useMemo(
+    () => async (token: string) => {
+      if (!remoteNotebookFilePath) {
+        throw new Error("No remote notebook file path");
+      }
+      if (!parsedUrlParams) {
+        throw new Error("No parsed URL params");
+      }
+      if (parsedUrlParams.type !== "gist") {
+        throw new Error("Not a Gist");
+      }
+      const gistUri = `https://gist.github.com/${parsedUrlParams.owner}/${parsedUrlParams.gistId}`;
+      await updateGitHubGist(
+        gistUri,
+        { [remoteNotebookFilePath]: JSON.stringify(toJS(notebook), null, 2) },
+        {
+          personalAccessToken: token,
+        },
+      );
+      setRemoteNotebook(fromJS(toJS(notebook)));
+    },
+    [notebook, remoteNotebookFilePath, parsedUrlParams],
+  );
+
   return (
     <>
       {loadError && (
@@ -349,9 +404,9 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         onCancel={() => {
           canceledRef.current = true;
         }}
-        githubParams={githubParams}
+        parsedUrlParams={parsedUrlParams}
         hasLocalChanges={hasLocalChanges}
-        onResetToGithub={resetToGithubVersion}
+        onResetToRemote={resetToRemoteVersion}
         onDownload={handleDownload}
         activeCellType={
           activeCellId
@@ -359,6 +414,9 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
             : undefined
         }
         onToggleCellType={activeCellId ? handleToggleCellType : undefined}
+        onUpdateGist={handleUpdateGist}
+        onSaveGist={handleSaveGist}
+        notebook={notebook}
       />
       <ScrollY width={width} height={height - 48}>
         <div style={{ padding: `24px ${leftPadding}px` }}>

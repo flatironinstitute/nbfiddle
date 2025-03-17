@@ -1,14 +1,13 @@
 import { ImmutableNotebook, toJS } from "@nteract/commutable";
-import { GithubNotebookParams } from "../../../shared/util/indexedDb";
 
 export const downloadNotebook = (
   notebook: ImmutableNotebook,
-  githubParams: GithubNotebookParams | null,
-  localname?: string,
+  localname: string | undefined,
+  remoteNotebookFilePath: string | null,
 ) => {
   const notebookData = toJS(notebook);
-  const filename = githubParams
-    ? githubParams.path
+  const filename = remoteNotebookFilePath
+    ? (remoteNotebookFilePath.split("/").pop() as string)
     : localname
       ? `${localname}.ipynb`
       : "Untitled.ipynb";

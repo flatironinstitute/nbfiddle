@@ -1,50 +1,75 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FunctionComponent, useEffect, useState } from "react";
 import { Tabs, Tab, Box } from "@mui/material";
 import NotebookView from "./NotebookView";
 import JupyterConfigurationView from "../../jupyter/JupyterConfigurationView";
 import AboutView from "./AboutView";
 import SettingsView from "./SettingsView";
-import { GithubNotebookParams } from "../../shared/util/indexedDb";
+import { ParsedUrlParams } from "../../shared/util/indexedDb";
 import { JupyterConnectivityProvider } from "../../jupyter/JupyterConnectivityProvider";
+import { useLocation } from "react-router-dom";
 
 type HomePageProps = { width: number; height: number };
 
 interface NotebookParams {
-  githubParams: GithubNotebookParams | null;
+  parsedUrlParams: ParsedUrlParams | null;
   localname: string | undefined;
 }
 
-const getNotebookParamsFromUrl = (): NotebookParams => {
-  const params = new URLSearchParams(window.location.search);
-  const url = params.get("url");
+const getNotebookParamsFromUrlSearch = (urlSearch: string): NotebookParams => {
+  const params = new URLSearchParams(urlSearch);
   const localname = params.get("localname") || undefined;
+  const url = params.get("url") || undefined;
 
-  let githubParams: GithubNotebookParams | null = null;
+  let parsedUrlParams: ParsedUrlParams | null = null;
   if (url) {
     // Expected format: https://github.com/owner/repo/blob/branch/path/to/notebook.ipynb
-    try {
-      const githubUrl = new URL(url);
-      if (githubUrl.hostname.includes("github.com")) {
-        const pathParts = githubUrl.pathname.split("/");
-        // Remove empty first element
-        pathParts.shift();
+    if (url.startsWith("https://github.com/")) {
+      const withoutPrefix = url.substring("https://github.com/".length);
+      const parts = withoutPrefix.split("/");
 
-        // Need at least: [owner, repo, blob, branch, ...path]
-        if (pathParts.length >= 5 && pathParts[2] === "blob") {
-          const owner = pathParts[0];
-          const repo = pathParts[1];
-          const branch = pathParts[3];
-          const path = pathParts.slice(4).join("/");
+      // Need at least: [owner, repo, blob, branch, ...path]
+      if (parts.length >= 5 && parts[2] === "blob") {
+        const owner = parts[0];
+        const repo = parts[1];
+        const branch = parts[3];
+        const path = parts.slice(4).join("/");
 
-          githubParams = { owner, repo, branch, path };
-        }
+        parsedUrlParams = { type: "github", owner, repo, branch, path };
+      } else {
+        throw new Error(`Invalid GitHub URL: ${url}`);
       }
-    } catch {
-      githubParams = null;
+    } else if (url.startsWith("https://gist.github.com/")) {
+      // Expected format: https://gist.github.com/owner/gistid#file-notebook-name-ipynb
+      const withoutPrefix = url.substring("https://gist.github.com/".length);
+      const hashIndex = withoutPrefix.indexOf("#");
+
+      if (hashIndex === -1) {
+        throw new Error("Missing file specifier in Gist URL");
+      }
+
+      const pathPart = withoutPrefix.substring(0, hashIndex);
+      const hash = withoutPrefix.substring(hashIndex); // Keep the # character
+
+      const [owner, gistId] = pathPart.split("/");
+      if (!owner || !gistId) {
+        throw new Error("Invalid Gist URL format");
+      }
+
+      if (!hash.startsWith("#file-")) {
+        throw new Error("Invalid file specifier in Gist URL");
+      }
+
+      // Remove 'file-' prefix from the hash
+      const gistFileMorphed = hash.substring(6); // Skip '#file-'
+      parsedUrlParams = { type: "gist", owner, gistId, gistFileMorphed };
+      console.log(parsedUrlParams);
+    } else {
+      throw new Error("Query parameter is not a GitHub or Gist URL");
     }
   }
 
-  return { githubParams, localname };
+  return { parsedUrlParams, localname };
 };
 
 const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
@@ -52,26 +77,48 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [notebookParams, setNotebookParams] = useState<
     NotebookParams | undefined
   >(undefined);
+  const [urlParseError, setUrlParseError] = useState<string | null>(null);
+
+  const location = useLocation();
+  const urlSearch = location.search;
 
   // Initialize notebook params from URL
   useEffect(() => {
-    const params = getNotebookParamsFromUrl();
-    setNotebookParams(params);
+    try {
+      setUrlParseError(null);
+      const params = getNotebookParamsFromUrlSearch(urlSearch);
+      setNotebookParams(params);
+    } catch (e: any) {
+      setUrlParseError(e.message);
+    }
 
     // Update params when URL changes
     const handleUrlChange = () => {
-      const newParams = getNotebookParamsFromUrl();
-      setNotebookParams(newParams);
+      setUrlParseError(null);
+      try {
+        const newParams = getNotebookParamsFromUrlSearch(urlSearch);
+        setNotebookParams(newParams);
+      } catch (e: any) {
+        setUrlParseError(e.message);
+      }
     };
 
     window.addEventListener("popstate", handleUrlChange);
     return () => window.removeEventListener("popstate", handleUrlChange);
-  }, []);
+  }, [urlSearch]);
+
+  if (urlParseError) {
+    return (
+      <Box>
+        <p>Error parsing URL: {urlParseError}</p>
+      </Box>
+    );
+  }
 
   if (notebookParams === undefined) {
     return (
       <Box>
-        <h1>Loading...</h1>
+        <p>Loading...</p>
       </Box>
     );
   }
@@ -108,7 +155,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
           <NotebookView
             width={width}
             height={height - 36}
-            githubParams={notebookParams.githubParams}
+            parsedUrlParams={notebookParams.parsedUrlParams}
             localname={notebookParams.localname}
           />
         </Box>

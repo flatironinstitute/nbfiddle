@@ -15,25 +15,31 @@ import {
 import { FunctionComponent, useState } from "react";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
-import { GithubNotebookParams } from "../shared/util/indexedDb";
+import { ParsedUrlParams } from "../shared/util/indexedDb";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DownloadIcon from "@mui/icons-material/Download";
 import CodeIcon from "@mui/icons-material/Code";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudSaveDialog from "./CloudSaveDialog";
+import { ImmutableNotebook } from "@nteract/commutable";
 
 type ToolbarProps = {
   executingCellId: string | null;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
   onCancel?: () => void;
-  githubParams: GithubNotebookParams | null;
+  parsedUrlParams: ParsedUrlParams | null;
   hasLocalChanges?: boolean;
-  onResetToGithub?: () => void;
+  onResetToRemote?: () => void;
   onDownload?: () => void;
   activeCellType?: "code" | "markdown";
   onToggleCellType?: () => void;
+  onUpdateGist: (token: string) => Promise<void>;
+  onSaveGist: (token: string, fileName: string) => Promise<void>;
+  notebook: ImmutableNotebook;
 };
 
 const Toolbar: FunctionComponent<ToolbarProps> = ({
@@ -41,24 +47,28 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onRestartSession,
   sessionClient,
   onCancel,
-  githubParams,
+  parsedUrlParams,
   hasLocalChanges,
-  onResetToGithub,
+  onResetToRemote,
   onDownload,
   activeCellType,
   onToggleCellType,
+  onUpdateGist,
+  onSaveGist,
+  notebook,
 }) => {
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [cloudSaveDialogOpen, setCloudSaveDialogOpen] = useState(false);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
     onRestartSession();
   };
 
-  const handleResetToGithub = () => {
+  const handleResetToRemote = () => {
     setResetDialogOpen(false);
-    onResetToGithub?.();
+    onResetToRemote?.();
   };
 
   const { jupyterServerIsAvailable } = useJupyterConnectivity();
@@ -67,13 +77,12 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     if (sessionClient) {
       return {
         color: "#4caf50",
-        text: "Connected to kernel",
       };
     }
     if (jupyterServerIsAvailable) {
       return {
         color: "#ff9800",
-        text: "Jupyter server available - click Restart Kernel to connect",
+        text: "Starting session...",
       };
     }
     return {
@@ -81,6 +90,14 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
       text: "No Jupyter server",
     };
   };
+
+  const a = parsedUrlParams
+    ? parsedUrlParams.type === "github"
+      ? `${parsedUrlParams.owner}/${parsedUrlParams.repo}/${parsedUrlParams.path}`
+      : parsedUrlParams.type === "gist"
+        ? `${parsedUrlParams.owner}/${parsedUrlParams.gistId}/${parsedUrlParams.gistFileMorphed}`
+        : "Invalid parsedUrlParams"
+    : null;
 
   const status = getConnectionStatus();
   return (
@@ -133,14 +150,12 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             </Typography>
           )}
 
-          {githubParams && (
+          {parsedUrlParams && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <GitHubIcon fontSize="small" />
-              <Tooltip
-                title={`${githubParams.owner}/${githubParams.repo}/${githubParams.path}`}
-              >
+              <Tooltip title={a}>
                 <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                  {githubParams.owner}/{githubParams.repo}/{githubParams.path}
+                  {a}
                 </Typography>
               </Tooltip>
               {hasLocalChanges && (
@@ -152,8 +167,16 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                   (Modified)
                 </Typography>
               )}
-              {hasLocalChanges && onResetToGithub && (
-                <Tooltip title="Reset to GitHub version">
+              {hasLocalChanges && onResetToRemote && (
+                <Tooltip
+                  title={
+                    parsedUrlParams.type === "github"
+                      ? "Reset to GitHub version"
+                      : parsedUrlParams.type === "gist"
+                        ? "Reset to Gist version"
+                        : "Invalid parsedUrlParams"
+                  }
+                >
                   <IconButton
                     size="small"
                     onClick={() => setResetDialogOpen(true)}
@@ -167,6 +190,15 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title="Save to cloud">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setCloudSaveDialogOpen(true)}
+            >
+              <CloudUploadIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Download as .ipynb">
             <IconButton size="small" color="primary" onClick={onDownload}>
               <DownloadIcon />
@@ -232,22 +264,43 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </DialogActions>
       </Dialog>
 
+      {cloudSaveDialogOpen && (
+        <CloudSaveDialog
+          open={true}
+          onClose={() => setCloudSaveDialogOpen(false)}
+          parsedUrlParams={parsedUrlParams}
+          onSaveGist={onSaveGist}
+          onUpdateGist={onUpdateGist}
+          notebook={notebook}
+        />
+      )}
+
       <Dialog
         open={resetDialogOpen}
         onClose={() => setResetDialogOpen(false)}
         aria-labelledby="reset-dialog-title"
       >
         <DialogTitle id="reset-dialog-title">
-          Reset to GitHub Version?
+          {parsedUrlParams?.type === "github"
+            ? "Reset to GitHub Version?"
+            : parsedUrlParams?.type === "gist"
+              ? "Reset to Gist Version?"
+              : "Invalid parsedUrlParams"}
         </DialogTitle>
         <DialogContent>
           This will discard all local changes and reset the notebook to the
-          version from GitHub.
+          version from{" "}
+          {parsedUrlParams?.type === "github"
+            ? "GitHub"
+            : parsedUrlParams?.type === "gist"
+              ? "the gist"
+              : "Invalid parsedUrlParams"}
+          .
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setResetDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={handleResetToGithub}
+            onClick={handleResetToRemote}
             color="error"
             variant="contained"
           >
