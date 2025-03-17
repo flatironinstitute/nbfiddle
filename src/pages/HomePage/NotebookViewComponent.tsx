@@ -83,6 +83,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   const isMobile = width <= 800;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
 
+  const [markdownCellIdsBeingEdited, setMarkdownCellIdsBeingEdited] = useState<
+    Set<string>
+  >(new Set());
+
   const maxWidth = 1200;
   const notebookWidth = Math.min(width - 48, maxWidth);
   const leftPadding = Math.max((width - notebookWidth) / 2, 24);
@@ -123,8 +127,24 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 if (event.shiftKey) {
+                  if (
+                    activeCellId &&
+                    markdownCellIdsBeingEdited.has(activeCellId)
+                  ) {
+                    setMarkdownCellIdsBeingEdited(
+                      (x) => new Set([...x].filter((a) => a !== activeCellId)),
+                    );
+                  }
                   onExecute({ advance: true });
                 } else if (event.ctrlKey || event.metaKey) {
+                  if (
+                    activeCellId &&
+                    markdownCellIdsBeingEdited.has(activeCellId)
+                  ) {
+                    setMarkdownCellIdsBeingEdited(
+                      (x) => new Set([...x].filter((a) => a !== activeCellId)),
+                    );
+                  }
                   onExecute({ advance: false });
                 }
               } else if (event.key === "ArrowUp") {
@@ -243,6 +263,12 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (cell.cell_type === "markdown") {
+                              setMarkdownCellIdsBeingEdited(
+                                (x) =>
+                                  new Set([...x].filter((a) => a !== cellId)),
+                              );
+                            }
                             onExecute({ advance: true });
                           }}
                           style={{
@@ -293,14 +319,32 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                         <MarkdownCellView
                           key={cellId}
                           cell={cell}
-                          onShiftEnter={() => onExecute({ advance: true })}
-                          onCtrlEnter={() => onExecute({ advance: false })}
+                          onShiftEnter={() => {
+                            setMarkdownCellIdsBeingEdited(
+                              (x) =>
+                                new Set([...x].filter((a) => a !== cellId)),
+                            );
+                            onExecute({ advance: true });
+                          }}
+                          onCtrlEnter={() => {
+                            setMarkdownCellIdsBeingEdited(
+                              (x) =>
+                                new Set([...x].filter((a) => a !== cellId)),
+                            );
+                            onExecute({ advance: false });
+                          }}
                           onChange={(newCell: ImmutableMarkdownCell) => {
                             const newNotebook = notebook.setIn(
                               ["cellMap", cellId],
                               newCell,
                             );
                             setNotebook(newNotebook);
+                          }}
+                          isEditing={markdownCellIdsBeingEdited.has(cellId)}
+                          onStartEditing={() => {
+                            setMarkdownCellIdsBeingEdited(
+                              (x) => new Set([...x, cellId]),
+                            );
                           }}
                         />
                       ) : (

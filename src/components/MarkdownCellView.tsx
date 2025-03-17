@@ -1,5 +1,5 @@
 import { ImmutableMarkdownCell } from "@nteract/commutable";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent } from "react";
 import ReactMarkdown from "react-markdown";
 import MarkdownCellEditor from "./MarkdownCellEditor";
 
@@ -9,6 +9,8 @@ interface MarkdownCellViewProps {
   onShiftEnter: () => void;
   onCtrlEnter: () => void;
   requiresFocus?: boolean;
+  isEditing: boolean;
+  onStartEditing: () => void;
 }
 
 const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
@@ -17,16 +19,14 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
   onShiftEnter,
   onCtrlEnter,
   requiresFocus,
+  isEditing,
+  onStartEditing,
 }) => {
-  const [isEditing, setIsEditing] = useState(cell.get("source") === "");
-
   const handleShiftEnter = () => {
-    setIsEditing(false);
     onShiftEnter();
   };
 
   const handleCtrlEnter = () => {
-    setIsEditing(false);
     onCtrlEnter();
   };
 
@@ -46,7 +46,7 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
 
   return (
     <div
-      onDoubleClick={() => setIsEditing(true)}
+      onDoubleClick={() => onStartEditing()}
       style={{
         marginBottom: 16,
         minHeight: 24,
