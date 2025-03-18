@@ -128,6 +128,8 @@ export const getOpenRouterApiKey = (): string | null => {
 };
 
 let totalCost = 0;
+export const getTotalCost = () => totalCost;
+
 const doQueryCompletion = async (o: {
   previousLines: string[];
   currentLineBeforeCursor: string;

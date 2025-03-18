@@ -3,6 +3,7 @@ import { FunctionComponent, useEffect, useState } from "react";
 import {
   setCodeCompletionsEnabled,
   getOpenRouterApiKey,
+  getTotalCost,
 } from "./useCodeCompletions";
 
 type SettingsViewProps = {
@@ -16,10 +17,16 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
 }) => {
   const [apiKey, setApiKey] = useState(() => getOpenRouterApiKey() || "");
   const [codeCompletionsEnabled, setLocalCodeCompletionsEnabled] = useState(
-    () => {
-      return localStorage.getItem("codeCompletionsEnabled") === "1";
-    },
+    () => localStorage.getItem("codeCompletionsEnabled") === "1",
   );
+  const [totalCost, setTotalCost] = useState(getTotalCost());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTotalCost(getTotalCost());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Effect to handle API key changes
   useEffect(() => {
@@ -57,16 +64,23 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
         />
       </Box>
 
-      <FormControlLabel
-        control={
-          <Switch
-            checked={codeCompletionsEnabled}
-            onChange={(e) => setLocalCodeCompletionsEnabled(e.target.checked)}
-            disabled={!apiKey}
-          />
-        }
-        label="Enable code completions"
-      />
+      <Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={codeCompletionsEnabled}
+              onChange={(e) => setLocalCodeCompletionsEnabled(e.target.checked)}
+              disabled={!apiKey}
+            />
+          }
+          label="Enable code completions"
+        />
+        {codeCompletionsEnabled && (
+          <Box sx={{ mt: 1, color: "text.secondary" }}>
+            Total cost this session: ${totalCost.toFixed(4)}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

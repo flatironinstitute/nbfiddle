@@ -28,7 +28,7 @@ import { ExecutionAction, ExecutionState } from "./notebook/notebook-execution";
 import { setSpecialContextForAI } from "./useCodeCompletions";
 import { makeRandomId } from "./utils";
 
-export const useScrollToActiveCell = (activeCellId: string | undefined) => {
+export const useScrollToActiveCellOld = (activeCellId: string | undefined) => {
   // Scroll active cell into view when it changes
   useEffect(() => {
     if (activeCellId) {
@@ -40,6 +40,43 @@ export const useScrollToActiveCell = (activeCellId: string | undefined) => {
           behavior: "smooth",
           block: "nearest",
         });
+      }
+    }
+  }, [activeCellId]);
+};
+
+export const useScrollToActiveCell = (activeCellId: string | undefined) => {
+  // Scroll active cell into view when it changes, but only within the notebook's scroll container
+  useEffect(() => {
+    if (activeCellId) {
+      const scrollContainer = document.querySelector(
+        '[data-testid="notebook-scroll-container"]',
+      );
+      if (!scrollContainer) return;
+
+      const scrollContainerHeight = scrollContainer.clientHeight;
+      const aa = Math.min((scrollContainerHeight * 2) / 3, 200);
+
+      const activeElement = scrollContainer.querySelector(
+        `[data-cell-id="${activeCellId}"]`,
+      );
+      if (activeElement && scrollContainer instanceof HTMLElement) {
+        // get bounding rectangles
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elementRect = activeElement.getBoundingClientRect();
+
+        // if the top of the element is above the visible area, scroll it to the top
+        if (elementRect.top < containerRect.top) {
+          console.log("---- 1");
+          scrollContainer.scrollTop += elementRect.top - containerRect.top;
+        }
+        // if the bottom of the element is below the visible area, scroll it so the bottom
+        // ends up 200 pixels above the container's bottom edge
+        else if (elementRect.top > containerRect.bottom - aa) {
+          console.log("---- 2");
+          scrollContainer.scrollTop +=
+            elementRect.top - (containerRect.bottom - aa);
+        }
       }
     }
   }, [activeCellId]);

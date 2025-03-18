@@ -6,8 +6,9 @@ const ScrollY: FunctionComponent<
     height: number;
     left?: number;
     top?: number;
+    dataTestId?: string;
   }>
-> = ({ width, height, children, left = 0, top = 0 }) => {
+> = ({ width, height, children, left = 0, top = 0, dataTestId }) => {
   return (
     <div
       style={{
@@ -18,6 +19,7 @@ const ScrollY: FunctionComponent<
         left,
         top,
       }}
+      data-testid={dataTestId}
     >
       {children}
     </div>

@@ -87,11 +87,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
     Set<string>
   >(new Set());
 
-  const a = 10;
-
+  const horizontalMargin = 10;
   const maxWidth = 1200;
-  const notebookWidth = Math.min(width - a * 2, maxWidth);
-  const leftPadding = Math.max((width - notebookWidth) / 2, a);
+  const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth);
+  const leftPadding = Math.max((width - notebookWidth) / 2, horizontalMargin);
   return (
     <>
       {loadError && (
@@ -112,12 +111,20 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
         onSaveGist={onSaveGist}
         notebook={notebook}
       />
-      <ScrollY width={width} height={height - a * 2}>
+      <ScrollY
+        width={width}
+        height={height - horizontalMargin * 2}
+        dataTestId="notebook-scroll-container"
+      >
         <div style={{ padding: `8px ${leftPadding}px` }}>
           <Paper
             elevation={1}
             sx={{
-              width: notebookWidth - (leftPadding > a ? 0 : a * 2 + 25),
+              width:
+                notebookWidth -
+                (leftPadding > horizontalMargin
+                  ? 0
+                  : horizontalMargin * 2 + 25),
               minHeight: 200,
               backgroundColor: "background.paper",
               padding: 3,
@@ -151,8 +158,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 }
               } else if (event.key === "ArrowUp") {
                 onGoToPreviousCell();
+                event.preventDefault();
               } else if (event.key === "ArrowDown") {
                 onGoToNextCell();
+                event.preventDefault();
               } else if (event.key === "a" && activeCellId) {
                 onAddCellBeforeCell(activeCellId);
               } else if (event.key === "b" && activeCellId) {
