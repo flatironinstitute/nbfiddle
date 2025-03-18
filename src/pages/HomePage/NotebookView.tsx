@@ -47,6 +47,7 @@ type NotebookViewProps = {
   height: number;
   parsedUrlParams: ParsedUrlParams | null;
   localname?: string;
+  onJupyterConfigClick?: () => void;
 };
 
 const NotebookView: FunctionComponent<NotebookViewProps> = ({
@@ -54,6 +55,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   height,
   parsedUrlParams,
   localname,
+  onJupyterConfigClick,
 }) => {
   const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
@@ -124,7 +126,14 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   const jupyterConnectivityState = useJupyterConnectivity();
 
-  const { sessionClient, handleRestartSession } = useSessionClient();
+  const { sessionClient, handleRestartSession: baseHandleRestartSession } =
+    useSessionClient();
+
+  const handleRestartSession = useCallback(() => {
+    baseHandleRestartSession();
+    dispatchExecution({ type: "clear-execution-counts" });
+  }, [baseHandleRestartSession]);
+
   useEffect(() => {
     if (!sessionClient && jupyterConnectivityState.jupyterServerIsAvailable) {
       handleRestartSession();
@@ -213,6 +222,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       cellIdRequiringFocus={cellIdRequiringFocus}
       setCellIdRequiringFocus={setCellIdRequiringFocus}
       onClearUrlParams={handleClearUrlParams}
+      onJupyterConfigClick={onJupyterConfigClick}
     />
   );
 };

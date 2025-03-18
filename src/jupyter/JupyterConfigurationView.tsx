@@ -363,7 +363,15 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
                         onChange={() => handleServerSelect(server.url)}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell
+                      onClick={() => handleServerSelect(server.url)}
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      }}
+                    >
                       {server.url} {server.name ? `(${server.name})` : ""}
                     </TableCell>
                     <TableCell>

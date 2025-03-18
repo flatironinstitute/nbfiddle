@@ -157,6 +157,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height={height - 36}
             parsedUrlParams={notebookParams.parsedUrlParams}
             localname={notebookParams.localname}
+            onJupyterConfigClick={() => setSelectedTab(1)}
           />
         </Box>
         <Box

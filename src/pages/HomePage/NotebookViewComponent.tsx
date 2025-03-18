@@ -25,6 +25,7 @@ type NotebookViewComponentProps = {
   width: number;
   height: number;
   loadError: string | undefined;
+  onJupyterConfigClick?: () => void;
   currentCellExecution: ExecutionState;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
@@ -56,6 +57,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   width,
   height,
   loadError,
+  onJupyterConfigClick,
   currentCellExecution,
   onRestartSession,
   sessionClient,
@@ -112,6 +114,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
         notebook={notebook}
         onSetNotebook={setNotebook}
         onClearUrlParams={onClearUrlParams}
+        onJupyterConfigClick={onJupyterConfigClick}
       />
       <ScrollY
         width={width}
@@ -265,12 +268,25 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       style={{
                         width: "50px",
                         display: "flex",
-                        justifyContent: "flex-end",
+                        flexDirection: "column",
                         alignItems: "center",
                         paddingRight: "10px",
                         userSelect: "none",
                       }}
                     >
+                      <div
+                        style={{
+                          fontFamily: "monospace",
+                          color: "#999",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {currentCellExecution.executingCellId === cellId
+                          ? "[*]:"
+                          : currentCellExecution.cellExecutionCounts[cellId]
+                            ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
+                            : " "}
+                      </div>
                       {cellId === activeCellId &&
                       (cell.cell_type === "markdown" || sessionClient) ? (
                         <button
@@ -298,15 +314,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                         >
                           ▶
                         </button>
-                      ) : (
-                        <div style={{ fontFamily: "monospace", color: "#999" }}>
-                          {currentCellExecution.executingCellId === cellId
-                            ? "[*]:"
-                            : currentCellExecution.cellExecutionCounts[cellId]
-                              ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
-                              : " "}
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                     <div style={{ flex: 1 }}>
                       {cell.cell_type === "code" ? (

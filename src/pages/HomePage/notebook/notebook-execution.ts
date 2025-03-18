@@ -6,7 +6,8 @@ export type ExecutionState = {
 
 export type ExecutionAction =
   | { type: "start-execution"; cellId: string }
-  | { type: "end-execution"; cellId: string };
+  | { type: "end-execution"; cellId: string }
+  | { type: "clear-execution-counts" };
 
 export const executionReducer = (
   state: ExecutionState,
@@ -24,6 +25,12 @@ export const executionReducer = (
           [action.cellId]: state.nextExecutionCount,
         },
         nextExecutionCount: state.nextExecutionCount + 1,
+      };
+    case "clear-execution-counts":
+      return {
+        ...state,
+        cellExecutionCounts: {},
+        nextExecutionCount: 1,
       };
     default:
       return state;

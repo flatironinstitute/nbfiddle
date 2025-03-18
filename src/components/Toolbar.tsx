@@ -32,6 +32,7 @@ import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOper
 type ToolbarProps = {
   onSetNotebook: (notebook: ImmutableNotebook) => void;
   onClearUrlParams: () => void;
+  onJupyterConfigClick?: () => void;
   executingCellId: string | null;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
@@ -57,6 +58,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   notebook,
   onSetNotebook,
   onClearUrlParams,
+  onJupyterConfigClick,
 }) => {
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -127,7 +129,18 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             userSelect: "none",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8,
+              },
+            }}
+            onClick={() => onJupyterConfigClick?.()}
+          >
             <Box
               sx={{
                 width: 8,
@@ -144,13 +157,23 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             <Tooltip title={`Executing cell`}>
               <CircularProgress size={20} color="primary" />
             </Tooltip>
+          ) : sessionClient ? (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontFamily: "monospace", cursor: "pointer" }}
+              onClick={() => onJupyterConfigClick?.()}
+            >
+              Ready
+            </Typography>
           ) : (
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ fontFamily: "monospace" }}
+              sx={{ fontFamily: "monospace", cursor: "pointer" }}
+              onClick={() => onJupyterConfigClick?.()}
             >
-              Ready
+              Not connected
             </Typography>
           )}
 

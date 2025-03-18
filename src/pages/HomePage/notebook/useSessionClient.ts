@@ -12,6 +12,7 @@ export const useSessionClient = () => {
   useEffect(() => {
     let canceled = false;
     let newSessionClient: PythonSessionClient | undefined = undefined;
+    setSessionClient(null);
     (async () => {
       if (jupyterConnectivityState.jupyterServerIsAvailable) {
         const s = new PythonSessionClient(jupyterConnectivityState);
