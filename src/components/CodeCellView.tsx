@@ -4,6 +4,7 @@ import { FunctionComponent } from "react";
 import CodeCellEditor from "./CodeCellEditor";
 
 interface CodeCellViewProps {
+  width: number;
   cell: ImmutableCodeCell;
   onChange: (cell: ImmutableCodeCell) => void;
   onShiftEnter: () => void;
@@ -13,6 +14,7 @@ interface CodeCellViewProps {
 }
 
 const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
+  width,
   cell,
   onChange,
   onShiftEnter,
@@ -24,6 +26,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
     <div
       style={{
         marginBottom: 16,
+        width,
         display: "flex",
         flexDirection: "column",
         gap: 8,

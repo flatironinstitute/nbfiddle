@@ -7,12 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { PublicServer, publicServers } from "./publicServers";
-import {
-  JupyterConnectivityContext,
-  setTokenForPublicServer,
-  tokenForPublicServer,
-} from "./JupyterConnectivity";
+import { JupyterConnectivityContext } from "./JupyterConnectivity";
 
 export const JupyterConnectivityProvider: FunctionComponent<
   PropsWithChildren<{
@@ -22,13 +17,6 @@ export const JupyterConnectivityProvider: FunctionComponent<
 > = ({ children, mode, extensionKernel }) => {
   const [jupyterServerUrl, setJupyterServerUrl] = useState("");
   const [jupyterServerToken, setJupyterServerToken] = useState("");
-
-  useEffect(() => {
-    const localStorageKey = "jupyter-server-url";
-    const storedJupyterServerUrl = localStorage.getItem(localStorageKey);
-    setJupyterServerUrl(storedJupyterServerUrl || "http://localhost:8888");
-    setJupyterServerToken(localStorage.getItem("jupyter-server-token") || "");
-  }, []);
 
   const [jupyterServerIsAvailable, setJupyterServerIsAvailable] =
     useState(false);
@@ -80,52 +68,6 @@ export const JupyterConnectivityProvider: FunctionComponent<
 
   const refreshJupyter = useCallback(() => setRefreshCode((c) => c + 1), []);
 
-  const changeJupyterServerUrl = useCallback(() => {
-    const newUrl = prompt(
-      "Enter the URL of your Jupyter runtime",
-      jupyterServerUrl,
-    );
-    if (newUrl) {
-      localStorage.setItem("jupyter-server-url", newUrl);
-      setJupyterServerUrl(newUrl);
-      setRefreshCode((c) => c + 1);
-    }
-  }, [jupyterServerUrl]);
-
-  const changeJupyterServerToken = useCallback(() => {
-    const newToken = prompt(
-      "Enter the token of your Jupyter runtime",
-      jupyterServerToken,
-    );
-    if (newToken !== null) {
-      localStorage.setItem("jupyter-server-token", newToken);
-      setJupyterServerToken(newToken);
-      setRefreshCode((c) => c + 1);
-      for (const server of publicServers) {
-        if (server.url === jupyterServerUrl) {
-          setTokenForPublicServer(server.name, newToken);
-        }
-      }
-    }
-  }, [jupyterServerToken, jupyterServerUrl]);
-
-  const selectPublicServer = useCallback((server: PublicServer) => {
-    localStorage.setItem("jupyter-server-url", server.url);
-    localStorage.setItem("jupyter-server-name", server.name);
-    let t = tokenForPublicServer(server.name);
-    if (!t) {
-      const newToken = prompt("Enter the token for this public server");
-      if (!newToken) {
-        return;
-      }
-      t = newToken;
-    }
-    localStorage.setItem("jupyter-server-token", t);
-    setJupyterServerUrl(server.url);
-    setJupyterServerToken(t);
-    setRefreshCode((c) => c + 1);
-  }, []);
-
   const value = useMemo(
     () => ({
       mode,
@@ -133,9 +75,8 @@ export const JupyterConnectivityProvider: FunctionComponent<
       jupyterServerToken,
       jupyterServerIsAvailable,
       refreshJupyter,
-      changeJupyterServerUrl,
-      changeJupyterServerToken,
-      selectPublicServer,
+      setJupyterServerUrl,
+      setJupyterServerToken,
       extensionKernel,
       numActiveKernels,
     }),
@@ -145,9 +86,8 @@ export const JupyterConnectivityProvider: FunctionComponent<
       jupyterServerToken,
       jupyterServerIsAvailable,
       refreshJupyter,
-      changeJupyterServerUrl,
-      changeJupyterServerToken,
-      selectPublicServer,
+      setJupyterServerUrl,
+      setJupyterServerToken,
       extensionKernel,
       numActiveKernels,
     ],

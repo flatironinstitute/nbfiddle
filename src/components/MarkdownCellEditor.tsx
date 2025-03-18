@@ -4,6 +4,7 @@ import * as monaco from "monaco-editor";
 import { FunctionComponent, useCallback, useEffect, useRef } from "react";
 
 type MarkdownCellEditorProps = {
+  width: number;
   cell: ImmutableMarkdownCell;
   onChange: (cell: ImmutableMarkdownCell) => void;
   onShiftEnter: () => void;
@@ -12,6 +13,7 @@ type MarkdownCellEditorProps = {
 };
 
 const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
+  width,
   cell,
   onChange,
   onShiftEnter,
@@ -71,7 +73,7 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
   }, [requiresFocus]);
 
   return (
-    <div style={{ border: "2px solid #e0e0e0", padding: 3 }}>
+    <div style={{ border: "2px solid #e0e0e0", padding: 3, width }}>
       <Editor
         height={`${Math.max(1, cell.get("source").split("\n").length) * 20}px`}
         defaultLanguage="markdown"

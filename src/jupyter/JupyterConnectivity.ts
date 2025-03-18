@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext } from "react";
-import { PublicServer } from "./publicServers";
 
 export type JupyterConnectivityState = {
   mode: "jupyter-server" | "jupyterlab-extension";
@@ -8,9 +7,8 @@ export type JupyterConnectivityState = {
   jupyterServerToken: string;
   jupyterServerIsAvailable: boolean;
   refreshJupyter: () => void;
-  changeJupyterServerUrl: () => void;
-  changeJupyterServerToken: () => void;
-  selectPublicServer: (server: PublicServer) => void;
+  setJupyterServerUrl: (newUrl: string) => void;
+  setJupyterServerToken: (newToken: string) => void;
   extensionKernel?: any;
   numActiveKernels: number;
 };
@@ -22,9 +20,8 @@ export const JupyterConnectivityContext =
     jupyterServerToken: "",
     jupyterServerIsAvailable: false,
     refreshJupyter: () => {},
-    changeJupyterServerUrl: () => {},
-    changeJupyterServerToken: () => {},
-    selectPublicServer: () => {},
+    setJupyterServerUrl: () => {},
+    setJupyterServerToken: () => {},
     extensionKernel: undefined,
     numActiveKernels: 0,
   });

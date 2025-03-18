@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import MarkdownCellEditor from "./MarkdownCellEditor";
 
 interface MarkdownCellViewProps {
+  width: number;
   cell: ImmutableMarkdownCell;
   onChange: (cell: ImmutableMarkdownCell) => void;
   onShiftEnter: () => void;
@@ -14,6 +15,7 @@ interface MarkdownCellViewProps {
 }
 
 const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
+  width,
   cell,
   onChange,
   onShiftEnter,
@@ -34,6 +36,7 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
     return (
       <div style={{ marginBottom: 16 }}>
         <MarkdownCellEditor
+          width={width}
           cell={cell}
           onChange={onChange}
           onShiftEnter={handleShiftEnter}
@@ -48,6 +51,7 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
     <div
       onDoubleClick={() => onStartEditing()}
       style={{
+        width,
         marginBottom: 16,
         minHeight: 24,
         cursor: "pointer",

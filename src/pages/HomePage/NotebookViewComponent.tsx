@@ -87,9 +87,11 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
     Set<string>
   >(new Set());
 
+  const a = 10;
+
   const maxWidth = 1200;
-  const notebookWidth = Math.min(width - 48, maxWidth);
-  const leftPadding = Math.max((width - notebookWidth) / 2, 24);
+  const notebookWidth = Math.min(width - a * 2, maxWidth);
+  const leftPadding = Math.max((width - notebookWidth) / 2, a);
   return (
     <>
       {loadError && (
@@ -110,12 +112,12 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
         onSaveGist={onSaveGist}
         notebook={notebook}
       />
-      <ScrollY width={width} height={height - 48}>
-        <div style={{ padding: `24px ${leftPadding}px` }}>
+      <ScrollY width={width} height={height - a * 2}>
+        <div style={{ padding: `8px ${leftPadding}px` }}>
           <Paper
             elevation={1}
             sx={{
-              width: notebookWidth - (leftPadding > 24 ? 0 : 48),
+              width: notebookWidth - (leftPadding > a ? 0 : a * 2 + 25),
               minHeight: 200,
               backgroundColor: "background.paper",
               padding: 3,
@@ -299,6 +301,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       {cell.cell_type === "code" ? (
                         <CodeCellView
                           key={cellId}
+                          width={width - 120} // figure out a better way to do this
                           cell={cell}
                           onShiftEnter={() => onExecute({ advance: true })}
                           onCtrlEnter={() => onExecute({ advance: false })}
@@ -318,6 +321,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
                           key={cellId}
+                          width={width - 120} // figure out a better way to do this
                           cell={cell}
                           onShiftEnter={() => {
                             setMarkdownCellIdsBeingEdited(
