@@ -28,7 +28,7 @@ type CloudSaveDialogProps = {
   open: boolean;
   onClose: () => void;
   parsedUrlParams: ParsedUrlParams | null;
-  onSaveGist: (token: string, fileName: string) => Promise<void>;
+  onSaveGist: (token: string, fileName: string) => Promise<string>;
   onUpdateGist: (token: string) => Promise<void>;
   notebook: ImmutableNotebook;
 };
@@ -48,6 +48,8 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
   const [fileName, setFileName] = useState("notebook.ipynb");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [newGistFileUri, setNewGistFileUri] = useState<string | null>(null);
 
   const notebookNumBytes = useMemo(() => {
     const json = JSON.stringify(toJS(notebook), null, 2);
@@ -77,13 +79,12 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
     setError(null);
     try {
       if (saveOption === "new-gist") {
-        await onSaveGist(gitHubToken, fileName);
-        localStorage.setItem("github_token", gitHubToken);
+        const fileUri = await onSaveGist(gitHubToken, fileName);
+        setNewGistFileUri(fileUri);
       } else {
         await onUpdateGist(gitHubToken);
-        localStorage.setItem("github_token", gitHubToken);
+        onClose();
       }
-      onClose();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An error occurred while saving",
@@ -94,6 +95,35 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
   }, [saveOption, gitHubToken, fileName, onSaveGist, onUpdateGist, onClose]);
 
   const isUpdateGistEnabled = parsedUrlParams?.type === "gist";
+
+  if (newGistFileUri) {
+    const nbfiddleLink = `${window.location.origin}/?url=${newGistFileUri.replace("#", "%23")}`;
+    const gistLink = newGistFileUri.split("#")[0]; // Get the base Gist URL without the file fragment
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Gist saved</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            A new Gist has been created successfully!
+          </Typography>
+          <Typography variant="body1" paragraph>
+            You can{" "}
+            <Link href={gistLink} target="_blank" rel="noreferrer">
+              view the Gist on GitHub
+            </Link>{" "}
+            or <Link href={nbfiddleLink}>open the notebook in nbfiddle</Link>.
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            You may also continue working with your current notebook without
+            loading the new Gist.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -148,7 +178,10 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
           fullWidth
           label="GitHub Personal Access Token"
           value={gitHubToken}
-          onChange={(e) => setGitHubToken(e.target.value)}
+          onChange={(e) => {
+            setGitHubToken(e.target.value);
+            localStorage.setItem("github_token", e.target.value);
+          }}
           type="password"
           margin="normal"
           size="small"

@@ -29,7 +29,7 @@ type NotebookViewComponentProps = {
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
   onCancel: () => void;
-  onSaveGist: (token: string, fileName: string) => Promise<void>;
+  onSaveGist: (token: string, fileName: string) => Promise<string>;
   onUpdateGist: (token: string) => Promise<void>;
   notebook: ImmutableNotebook;
   parsedUrlParams: ParsedUrlParams | null;

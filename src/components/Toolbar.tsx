@@ -34,7 +34,7 @@ type ToolbarProps = {
   onResetToRemote?: () => void;
   onDownload?: () => void;
   onUpdateGist: (token: string) => Promise<void>;
-  onSaveGist: (token: string, fileName: string) => Promise<void>;
+  onSaveGist: (token: string, fileName: string) => Promise<string>;
   notebook: ImmutableNotebook;
 };
 

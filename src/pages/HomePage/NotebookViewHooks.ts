@@ -8,7 +8,6 @@ import {
   toJS,
 } from "@nteract/commutable";
 import { useCallback, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import PythonSessionClient from "src/jupyter/PythonSessionClient";
 import saveAsGitHubGist, {
   updateGitHubGist,
@@ -385,7 +384,6 @@ export const useSaveGist = (
   notebook: ImmutableNotebook,
   setRemoteNotebook: (n: ImmutableNotebook) => void,
 ) => {
-  const navigate = useNavigate();
   return useMemo(
     () => async (token: string, fileName: string) => {
       const gistUri = await saveAsGitHubGist(
@@ -400,9 +398,10 @@ export const useSaveGist = (
       setRemoteNotebook(fromJS(toJS(notebook)));
       // replace special characters with "-"
       const morphedFileName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
-      navigate(`?url=${gistUri}%23file-${morphedFileName}`);
+      const gistFileUri = `${gistUri}#file-${morphedFileName}`;
+      return gistFileUri;
     },
-    [notebook, navigate, setRemoteNotebook],
+    [notebook, setRemoteNotebook],
   );
 };
 
