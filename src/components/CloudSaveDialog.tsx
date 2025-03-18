@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ImmutableNotebook, toJS } from "@nteract/commutable";
+import { ImmutableNotebook } from "@nteract/commutable";
 import { formatBytes } from "@shared/util/formatBytes";
 import { ParsedUrlParams } from "@shared/util/indexedDb";
 import {
@@ -21,6 +21,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import serializeNotebook from "../pages/HomePage/serializeNotebook";
 
 type SaveOption = "update-gist" | "new-gist";
 
@@ -52,12 +53,13 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
   const [newGistFileUri, setNewGistFileUri] = useState<string | null>(null);
 
   const notebookNumBytes = useMemo(() => {
-    const json = JSON.stringify(toJS(notebook), null, 2);
+    const x = serializeNotebook(notebook);
+    const json = JSON.stringify(x, null, 2);
     return json.length;
   }, [notebook]);
 
   const notebookNumBytesWithoutOutputCells = useMemo(() => {
-    const mutableNotebook = toJS(notebook);
+    const mutableNotebook = serializeNotebook(notebook);
     for (const cell of mutableNotebook.cells) {
       if (cell.cell_type === "code") {
         cell.outputs = [];

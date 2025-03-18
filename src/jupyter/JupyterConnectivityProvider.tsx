@@ -23,9 +23,12 @@ export const JupyterConnectivityProvider: FunctionComponent<
   const [numActiveKernels, setNumActiveKernels] = useState(0);
 
   const check = useCallback(async () => {
+    if (!jupyterServerUrl) {
+      setJupyterServerIsAvailable(false);
+      return;
+    }
     if (mode === "jupyter-server") {
       try {
-        console.log(`Fetching ${jupyterServerUrl}/api/kernels`);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000);
         const headers: { [key: string]: string } = {
@@ -50,8 +53,8 @@ export const JupyterConnectivityProvider: FunctionComponent<
           setJupyterServerIsAvailable(false);
           setNumActiveKernels(0);
         }
-      } catch {
-        console.error("Failed to fetch kernels *");
+      } catch (e: any) {
+        console.error("Failed to fetch kernels *", e);
         setJupyterServerIsAvailable(false);
         setNumActiveKernels(0);
       }

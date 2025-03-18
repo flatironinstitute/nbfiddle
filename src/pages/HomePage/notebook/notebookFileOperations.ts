@@ -3,10 +3,10 @@ import {
   ImmutableNotebook,
   makeCodeCell,
   makeMarkdownCell,
-  makeNotebookRecord,
-  toJS,
+  makeNotebookRecord
 } from "@nteract/commutable";
 import { List as ImmutableList, Map as ImmutableMap } from "immutable";
+import serializeNotebook from "../serializeNotebook";
 
 const convertToJupytext = (notebook: ImmutableNotebook): string => {
   let pythonCode = "";
@@ -126,7 +126,7 @@ export const downloadNotebook = (
   localname: string | undefined,
   remoteNotebookFilePath: string | null,
 ) => {
-  const notebookData = toJS(notebook);
+  const notebookData = serializeNotebook(notebook);
   const filename = remoteNotebookFilePath
     ? (remoteNotebookFilePath.split("/").pop() as string)
     : localname

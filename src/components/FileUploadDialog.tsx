@@ -4,19 +4,25 @@ import {
   DialogContent,
   Box,
   Typography,
+  TextField,
+  DialogActions,
+  Button,
+  Divider,
 } from "@mui/material";
-import { FunctionComponent, useCallback } from "react";
+import { FunctionComponent, useCallback, useState } from "react";
 
 type FileUploadDialogProps = {
   open: boolean;
   onClose: () => void;
   onFileSelected: (file: File) => void;
+  onContentPasted: (content: string) => void;
 };
 
 const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
   open,
   onClose,
   onFileSelected,
+  onContentPasted,
 }) => {
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -41,10 +47,22 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
     [onClose, onFileSelected],
   );
 
+  const [pastedContent, setPastedContent] = useState("");
+
+  const handlePasteSubmit = useCallback(() => {
+    if (pastedContent.trim()) {
+      onContentPasted(pastedContent);
+      onClose();
+    }
+  }, [pastedContent, onContentPasted, onClose]);
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Upload Notebook</DialogTitle>
       <DialogContent>
+        <Typography variant="subtitle1" gutterBottom>
+          Option 1: Drag and drop or select a file
+        </Typography>
         <Box
           sx={{
             border: "2px dashed",
@@ -61,7 +79,9 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
           onDragOver={(e) => e.preventDefault()}
           onClick={() => document.getElementById("file-input")?.click()}
         >
-          <Typography>Drag and drop a file here or click to select</Typography>
+          <Typography variant="body1">
+            Drag and drop a file here or click to select
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             Supported formats: .py (Jupytext), .ipynb
           </Typography>
@@ -73,7 +93,37 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
             style={{ display: "none" }}
           />
         </Box>
+
+        <Box sx={{ my: 2 }}>
+          <Divider>
+            <Typography color="text.secondary">OR</Typography>
+          </Divider>
+        </Box>
+
+        <Typography variant="subtitle1" gutterBottom>
+          Option 2: Paste Jupytext content
+        </Typography>
+        <TextField
+          multiline
+          rows={8}
+          fullWidth
+          placeholder="Paste your notebook content here..."
+          value={pastedContent}
+          onChange={(e) => setPastedContent(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
       </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          onClick={handlePasteSubmit}
+          disabled={!pastedContent.trim()}
+          variant="contained"
+        >
+          Submit Pasted Content
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

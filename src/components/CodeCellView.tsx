@@ -1,6 +1,7 @@
 import { ImmutableCodeCell, ImmutableOutput } from "@nteract/commutable";
 import AnsiToHtml from "ansi-to-html";
 import { FunctionComponent } from "react";
+import PlotlyPlot from "./PlotlyPlot";
 import CodeCellEditor from "./CodeCellEditor";
 
 interface CodeCellViewProps {
@@ -24,6 +25,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
 }) => {
   return (
     <div
+      className="CodeCellView"
       style={{
         marginBottom: 16,
         width,
@@ -42,6 +44,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
       />
       {cell.outputs.size > 0 && (
         <div
+          className="CodeCellOutputs"
           style={{
             padding: "8px 0px",
             // backgroundColor: '#f5f5f5',
@@ -75,8 +78,8 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
               );
             } else if (output.output_type === "display_data") {
               const plainText = output.data["text/plain"] || "";
-              const pngBase64 = output.data["image/png"] || "";
-              if (pngBase64) {
+              if ("image/png" in output.data) {
+                const pngBase64 = output.data["image/png"] || "";
                 return (
                   <div key={index}>
                     <img
@@ -84,6 +87,22 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                       alt={plainText}
                     />
                   </div>
+                );
+              } else if ("application/vnd.plotly.v1+json" in output.data) {
+                const plotlyJson = output.data[
+                  "application/vnd.plotly.v1+json"
+                ] as {
+                  data: Plotly.Data[];
+                  layout?: Partial<Plotly.Layout>;
+                  config?: Partial<Plotly.Config>;
+                };
+                return (
+                  <PlotlyPlot
+                    key={index}
+                    data={plotlyJson.data}
+                    layout={plotlyJson.layout}
+                    config={plotlyJson.config}
+                  />
                 );
               } else {
                 return <div key={index}>{plainText}</div>;

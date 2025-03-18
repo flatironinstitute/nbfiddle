@@ -13,36 +13,36 @@ const executeCell = async (
   const removeOnOutputItemCallback = sessionClient.onOutputItem((item) => {
     if (item.type === "iopub") {
       const iopub = item.iopubMessage;
-      if ("name" in iopub.content && iopub.content.name === "stdout") {
-        outputs.push(
-          createImmutableOutput({
-            output_type: "stream",
-            name: "stdout",
-            text: iopub.content.text,
-          }),
-        );
-      } else if ("name" in iopub.content && iopub.content.name === "stderr") {
-        outputs.push(
-          createImmutableOutput({
-            output_type: "stream",
-            name: "stderr",
-            text: iopub.content.text,
-          }),
-        );
-      } else if ("traceback" in iopub.content) {
+      if (iopub.header.msg_type === "stream") {
+        if ("text" in iopub.content) {
+          outputs.push(
+            createImmutableOutput({
+              output_type: "stream",
+              name: iopub.content.name,
+              text: iopub.content.text,
+            }),
+          );
+        } else {
+          console.warn("Not handling stream message without text", iopub);
+        }
+      } else if (iopub.header.msg_type === "error") {
         outputs.push(
           createImmutableOutput({
             output_type: "error",
             ...iopub.content,
           } as any),
         );
-      } else if ("data" in iopub.content) {
+      } else if (iopub.header.msg_type === "display_data") {
         outputs.push(
           createImmutableOutput({
             output_type: "display_data",
             ...iopub.content,
           } as any),
         );
+      } else if ("execution_state" in iopub.content) {
+        // ignore
+      } else if (iopub.header.msg_type === "execute_input") {
+        // ignore
       } else {
         console.warn("Unknown iopub message", iopub);
       }

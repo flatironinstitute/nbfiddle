@@ -1,4 +1,4 @@
-import { emptyNotebook, ImmutableNotebook, toJS } from "@nteract/commutable";
+import { emptyNotebook, ImmutableNotebook } from "@nteract/commutable";
 import {
   FunctionComponent,
   useCallback,
@@ -32,6 +32,7 @@ import {
   useToggleCellType,
   useUpdateGist,
 } from "./NotebookViewHooks";
+import serializeNotebook from "./serializeNotebook";
 import useCodeCompletions, {
   setCodeCompletionsEnabled,
 } from "./useCodeCompletions";
@@ -110,7 +111,11 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   // Save notebook on changes with debouncing
   useEffect(() => {
-    saveNotebookToStorageDebounced(toJS(notebook), parsedUrlParams, localname);
+    saveNotebookToStorageDebounced(
+      serializeNotebook(notebook),
+      parsedUrlParams,
+      localname,
+    );
   }, [notebook, parsedUrlParams, localname]);
 
   const handleDownload = useCallback(() => {

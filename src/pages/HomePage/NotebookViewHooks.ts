@@ -4,8 +4,7 @@ import {
   fromJS,
   ImmutableCodeCell,
   ImmutableNotebook,
-  insertCellAfter,
-  toJS,
+  insertCellAfter
 } from "@nteract/commutable";
 import { useCallback, useEffect, useMemo } from "react";
 import PythonSessionClient from "src/jupyter/PythonSessionClient";
@@ -24,6 +23,7 @@ import {
   deleteActiveCell,
 } from "./notebook/notebook-cell-operations";
 import { ExecutionAction, ExecutionState } from "./notebook/notebook-execution";
+import serializeNotebook from "./serializeNotebook";
 import { setSpecialContextForAI } from "./useCodeCompletions";
 import { makeRandomId } from "./utils";
 
@@ -388,14 +388,14 @@ export const useSaveGist = (
     () => async (token: string, fileName: string) => {
       const gistUri = await saveAsGitHubGist(
         {
-          [fileName]: JSON.stringify(toJS(notebook), null, 2),
+          [fileName]: JSON.stringify(serializeNotebook(notebook), null, 2),
         },
         {
           defaultDescription: "Notebook saved from nbfiddle",
           personalAccessToken: token,
         },
       );
-      setRemoteNotebook(fromJS(toJS(notebook)));
+      setRemoteNotebook(fromJS(serializeNotebook(notebook)));
       // replace special characters with "-"
       const morphedFileName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
       const gistFileUri = `${gistUri}#file-${morphedFileName}`;
@@ -425,12 +425,18 @@ export const useUpdateGist = (
       const gistUri = `https://gist.github.com/${parsedUrlParams.owner}/${parsedUrlParams.gistId}`;
       await updateGitHubGist(
         gistUri,
-        { [remoteNotebookFilePath]: JSON.stringify(toJS(notebook), null, 2) },
+        {
+          [remoteNotebookFilePath]: JSON.stringify(
+            serializeNotebook(notebook),
+            null,
+            2,
+          ),
+        },
         {
           personalAccessToken: token,
         },
       );
-      setRemoteNotebook(fromJS(toJS(notebook)));
+      setRemoteNotebook(fromJS(serializeNotebook(notebook)));
     },
     [notebook, remoteNotebookFilePath, parsedUrlParams, setRemoteNotebook],
   );

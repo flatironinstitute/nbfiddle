@@ -135,7 +135,6 @@ class PythonSessionClient {
     }
 
     const onStatusChanged = (_: any, status: any) => {
-      console.info("status", status);
       if (status === "idle") {
         this._setPythonSessionStatus("idle");
       } else if (status === "busy") {
@@ -294,9 +293,8 @@ class PythonSessionClient {
     }
     if (!this.#kernel) throw Error("Unexpected, no kernel");
     const future = this.#kernel.requestExecute({ code });
-    const reply = await future.done;
+    // const reply = await future.done;
     future.dispose();
-    console.log(reply);
   }
   onOutputItem(callback: (item: PythonSessionOutputItem) => void) {
     this.#onOutputItemCallbacks.push(callback);

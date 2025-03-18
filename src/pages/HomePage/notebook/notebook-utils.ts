@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ImmutableNotebook, toJS } from "@nteract/commutable";
+import { ImmutableNotebook } from "@nteract/commutable";
+import serializeNotebook from "../serializeNotebook";
 
 export function makeRandomId() {
   return crypto.randomUUID();
@@ -9,7 +10,10 @@ export const checkNotebooksEqual = (
   notebook1: ImmutableNotebook,
   notebook2: ImmutableNotebook,
 ) => {
-  return checkDeepEqual(toJS(notebook1), toJS(notebook2));
+  return checkDeepEqual(
+    serializeNotebook(notebook1),
+    serializeNotebook(notebook2),
+  );
 };
 
 export const checkDeepEqual = (a: any, b: any): boolean => {

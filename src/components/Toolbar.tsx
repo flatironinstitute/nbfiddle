@@ -341,6 +341,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           // Clear URL params without reloading
           onClearUrlParams();
         }}
+        onContentPasted={(jupytext) => {
+          // Convert from jupytext
+          const notebook = convertFromJupytext(jupytext);
+          onSetNotebook(notebook);
+          // Clear URL params without reloading
+          onClearUrlParams();
+        }}
       />
     </AppBar>
   );
