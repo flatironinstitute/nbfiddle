@@ -189,6 +189,7 @@ export const useExecute = (
       if (!cell) return;
 
       let newNotebook = notebook;
+      console.log("---- executing", serializeNotebook(newNotebook).cells);
       if (cell.cell_type === "code") {
         if (!sessionClient) {
           console.warn("Python session client not available");

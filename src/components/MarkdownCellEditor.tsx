@@ -12,6 +12,31 @@ type MarkdownCellEditorProps = {
   requiresFocus?: boolean;
 };
 
+// we need to do it this way because of some annoying issues with the monaco editor
+
+const globalEnterPressManager = {
+  shiftEnterCallbacks: [] as (() => void)[],
+  ctrlEnterCallbacks: [] as (() => void)[],
+  registerShiftEnterCallback: (callback: () => void) => {
+    globalEnterPressManager.shiftEnterCallbacks.push(callback);
+  },
+  registerCtrlEnterCallback: (callback: () => void) => {
+    globalEnterPressManager.ctrlEnterCallbacks.push(callback);
+  },
+  unregisterShiftEnterCallback: (callback: () => void) => {
+    globalEnterPressManager.shiftEnterCallbacks =
+      globalEnterPressManager.shiftEnterCallbacks.filter(
+        (cb) => cb !== callback,
+      );
+  },
+  unregisterCtrlEnterCallback: (callback: () => void) => {
+    globalEnterPressManager.ctrlEnterCallbacks =
+      globalEnterPressManager.ctrlEnterCallbacks.filter(
+        (cb) => cb !== callback,
+      );
+  },
+};
+
 const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
   width,
   cell,
@@ -29,20 +54,22 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  const onShiftEnterRef = useRef(onShiftEnter);
-  const onCtrlEnterRef = useRef(onCtrlEnter);
-
   useEffect(() => {
-    onShiftEnterRef.current = onShiftEnter;
-    onCtrlEnterRef.current = onCtrlEnter;
+    globalEnterPressManager.registerShiftEnterCallback(onShiftEnter);
+    globalEnterPressManager.registerCtrlEnterCallback(onCtrlEnter);
+
+    return () => {
+      globalEnterPressManager.unregisterShiftEnterCallback(onShiftEnter);
+      globalEnterPressManager.unregisterCtrlEnterCallback(onCtrlEnter);
+    };
   }, [onShiftEnter, onCtrlEnter]);
 
   const handleEditorMount: OnMount = useCallback((editor) => {
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-      onShiftEnterRef.current();
+      globalEnterPressManager.shiftEnterCallbacks.forEach((cb) => cb());
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      onCtrlEnterRef.current();
+      globalEnterPressManager.ctrlEnterCallbacks.forEach((cb) => cb());
     });
 
     editor.onKeyDown((event) => {

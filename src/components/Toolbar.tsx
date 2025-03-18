@@ -371,11 +371,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           if (file.name.endsWith(".py")) {
             // Convert from jupytext
             const notebook = convertFromJupytext(content);
+            onClearUrlParams();
             onSetNotebook(notebook);
           } else if (file.name.endsWith(".ipynb")) {
             // Parse as ipynb
             const notebookData = JSON.parse(content);
             const notebook = fromJS(notebookData);
+            onClearUrlParams();
             onSetNotebook(notebook);
           }
           // Clear URL params without reloading
@@ -384,9 +386,9 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         onContentPasted={(jupytext) => {
           // Convert from jupytext
           const notebook = convertFromJupytext(jupytext);
-          onSetNotebook(notebook);
-          // Clear URL params without reloading
+          // Clear URL params first
           onClearUrlParams();
+          onSetNotebook(notebook);
         }}
       />
     </AppBar>
