@@ -4,7 +4,7 @@ import {
   fromJS,
   ImmutableCodeCell,
   ImmutableNotebook,
-  insertCellAfter
+  insertCellAfter,
 } from "@nteract/commutable";
 import { useCallback, useEffect, useMemo } from "react";
 import PythonSessionClient from "src/jupyter/PythonSessionClient";

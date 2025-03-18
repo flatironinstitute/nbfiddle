@@ -294,6 +294,7 @@ class PythonSessionClient {
     if (!this.#kernel) throw Error("Unexpected, no kernel");
     const future = this.#kernel.requestExecute({ code });
     // const reply = await future.done;
+    await future.done;
     future.dispose();
   }
   onOutputItem(callback: (item: PythonSessionOutputItem) => void) {

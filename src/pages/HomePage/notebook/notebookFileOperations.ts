@@ -3,7 +3,7 @@ import {
   ImmutableNotebook,
   makeCodeCell,
   makeMarkdownCell,
-  makeNotebookRecord
+  makeNotebookRecord,
 } from "@nteract/commutable";
 import { List as ImmutableList, Map as ImmutableMap } from "immutable";
 import serializeNotebook from "../serializeNotebook";

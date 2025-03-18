@@ -9,10 +9,13 @@ const executeCell = async (
   onOutputsUpdated: (outputs: List<ImmutableOutput>) => void,
   canceledRef: { current: boolean },
 ): Promise<List<ImmutableOutput>> => {
+  console.log("--- executeCell");
   const outputs: ImmutableOutput[] = [];
   const removeOnOutputItemCallback = sessionClient.onOutputItem((item) => {
+    console.log("---- item", item);
     if (item.type === "iopub") {
       const iopub = item.iopubMessage;
+      console.log("--- iopub", iopub);
       if (iopub.header.msg_type === "stream") {
         if ("text" in iopub.content) {
           outputs.push(
