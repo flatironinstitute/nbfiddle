@@ -1,4 +1,52 @@
-import { ImmutableNotebook, toJS } from "@nteract/commutable";
+import { ImmutableCell, ImmutableNotebook, toJS } from "@nteract/commutable";
+
+const convertToJupytext = (notebook: ImmutableNotebook): string => {
+  let pythonCode = "";
+
+  notebook.cellOrder.forEach((cellId: string) => {
+    const cell = notebook.cellMap.get(cellId) as ImmutableCell;
+    if (cell.cell_type === "markdown") {
+      pythonCode += `# %% [markdown]\n${cell.source}\n\n`;
+    } else if (cell.cell_type === "code") {
+      pythonCode += `# %%\n${cell.source}\n\n`;
+    }
+  });
+
+  return pythonCode;
+};
+
+export const downloadJupytext = (
+  notebook: ImmutableNotebook,
+  localname: string | undefined,
+  remoteNotebookFilePath: string | null,
+) => {
+  const pythonCode = convertToJupytext(notebook);
+  const filename = remoteNotebookFilePath
+    ? (remoteNotebookFilePath
+        .split("/")
+        .pop()
+        ?.replace(".ipynb", ".py") as string)
+    : localname
+      ? `${localname}.py`
+      : "Untitled.py";
+
+  const blob = new Blob([pythonCode], {
+    type: "text/plain",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+export const copyJupytextToClipboard = async (notebook: ImmutableNotebook) => {
+  const pythonCode = convertToJupytext(notebook);
+  await navigator.clipboard.writeText(pythonCode);
+};
 
 export const downloadNotebook = (
   notebook: ImmutableNotebook,

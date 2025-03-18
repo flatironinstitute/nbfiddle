@@ -23,6 +23,7 @@ import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../shared/util/indexedDb";
 import CloudSaveDialog from "./CloudSaveDialog";
+import DownloadOptionsDialog from "./DownloadOptionsDialog";
 
 type ToolbarProps = {
   executingCellId: string | null;
@@ -32,7 +33,6 @@ type ToolbarProps = {
   parsedUrlParams: ParsedUrlParams | null;
   hasLocalChanges?: boolean;
   onResetToRemote?: () => void;
-  onDownload?: () => void;
   onUpdateGist: (token: string) => Promise<void>;
   onSaveGist: (token: string, fileName: string) => Promise<string>;
   notebook: ImmutableNotebook;
@@ -46,7 +46,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   parsedUrlParams,
   hasLocalChanges,
   onResetToRemote,
-  onDownload,
   onUpdateGist,
   onSaveGist,
   notebook,
@@ -54,6 +53,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [cloudSaveDialogOpen, setCloudSaveDialogOpen] = useState(false);
+  const [downloadOptionsDialogOpen, setDownloadOptionsDialogOpen] =
+    useState(false);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
@@ -193,8 +194,12 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               <CloudUploadIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Download as .ipynb">
-            <IconButton size="small" color="primary" onClick={onDownload}>
+          <Tooltip title="Download Options">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setDownloadOptionsDialogOpen(true)}
+            >
               <DownloadIcon />
             </IconButton>
           </Tooltip>
@@ -286,6 +291,19 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <DownloadOptionsDialog
+        open={downloadOptionsDialogOpen}
+        onClose={() => setDownloadOptionsDialogOpen(false)}
+        notebook={notebook}
+        remoteNotebookFilePath={
+          parsedUrlParams?.type === "github"
+            ? parsedUrlParams.path
+            : parsedUrlParams?.type === "gist"
+              ? parsedUrlParams.gistFileMorphed
+              : null
+        }
+      />
     </AppBar>
   );
 };
