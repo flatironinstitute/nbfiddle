@@ -310,7 +310,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       {cell.cell_type === "code" ? (
                         <CodeCellView
                           key={cellId}
-                          width={width - 120} // figure out a better way to do this
+                          width={notebookWidth - 120} // figure out a better way to do this
                           cell={cell}
                           onShiftEnter={() => onExecute({ advance: true })}
                           onCtrlEnter={() => onExecute({ advance: false })}
@@ -330,7 +330,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
                           key={cellId}
-                          width={width - 120} // figure out a better way to do this
+                          width={notebookWidth - 120} // figure out a better way to do this
                           cell={cell}
                           onShiftEnter={() => {
                             setMarkdownCellIdsBeingEdited(
