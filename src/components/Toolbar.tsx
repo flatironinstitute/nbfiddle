@@ -1,6 +1,7 @@
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DownloadIcon from "@mui/icons-material/Download";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
@@ -22,10 +23,15 @@ import { FunctionComponent, useState } from "react";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../shared/util/indexedDb";
+import { fromJS } from "@nteract/commutable";
 import CloudSaveDialog from "./CloudSaveDialog";
 import DownloadOptionsDialog from "./DownloadOptionsDialog";
+import FileUploadDialog from "./FileUploadDialog";
+import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
 
 type ToolbarProps = {
+  onSetNotebook: (notebook: ImmutableNotebook) => void;
+  onClearUrlParams: () => void;
   executingCellId: string | null;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
@@ -49,12 +55,15 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onUpdateGist,
   onSaveGist,
   notebook,
+  onSetNotebook,
+  onClearUrlParams,
 }) => {
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [cloudSaveDialogOpen, setCloudSaveDialogOpen] = useState(false);
   const [downloadOptionsDialogOpen, setDownloadOptionsDialogOpen] =
     useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
@@ -203,6 +212,15 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               <DownloadIcon />
             </IconButton>
           </Tooltip>
+          <Tooltip title="Upload Notebook">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <FileUploadIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Restart Kernel">
             <span>
               <IconButton
@@ -303,6 +321,26 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               ? parsedUrlParams.gistFileMorphed
               : null
         }
+      />
+
+      <FileUploadDialog
+        open={uploadDialogOpen}
+        onClose={() => setUploadDialogOpen(false)}
+        onFileSelected={async (file) => {
+          const content = await file.text();
+          if (file.name.endsWith(".py")) {
+            // Convert from jupytext
+            const notebook = convertFromJupytext(content);
+            onSetNotebook(notebook);
+          } else if (file.name.endsWith(".ipynb")) {
+            // Parse as ipynb
+            const notebookData = JSON.parse(content);
+            const notebook = fromJS(notebookData);
+            onSetNotebook(notebook);
+          }
+          // Clear URL params without reloading
+          onClearUrlParams();
+        }}
       />
     </AppBar>
   );

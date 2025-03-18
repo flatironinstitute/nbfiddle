@@ -38,6 +38,7 @@ type NotebookViewComponentProps = {
   onDownload: () => void;
   paperRef: React.RefObject<HTMLDivElement>;
   onExecute: (o: { advance: boolean }) => void;
+  onClearUrlParams: () => void;
   onGoToPreviousCell: () => void;
   onGoToNextCell: () => void;
   onToggleCellType: (cellId: string) => void;
@@ -65,11 +66,11 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   parsedUrlParams,
   hasLocalChanges,
   resetToRemoteVersion,
-  onDownload,
   paperRef,
   onExecute,
   onGoToPreviousCell,
   onGoToNextCell,
+  onClearUrlParams,
   onToggleCellType,
   onAddCellBeforeCell,
   onAddCellAfterCell,
@@ -106,10 +107,11 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
         parsedUrlParams={parsedUrlParams}
         hasLocalChanges={hasLocalChanges}
         onResetToRemote={resetToRemoteVersion}
-        onDownload={onDownload}
         onUpdateGist={onUpdateGist}
         onSaveGist={onSaveGist}
         notebook={notebook}
+        onSetNotebook={setNotebook}
+        onClearUrlParams={onClearUrlParams}
       />
       <ScrollY
         width={width}

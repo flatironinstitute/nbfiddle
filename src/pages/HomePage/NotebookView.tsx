@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { useJupyterConnectivity } from "../../jupyter/JupyterConnectivity";
 import {
   ParsedUrlParams,
@@ -53,6 +54,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   parsedUrlParams,
   localname,
 }) => {
+  const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
   const [notebook, setNotebook] = useState<ImmutableNotebook>(emptyNotebook);
   const [remoteNotebookFilePath, setRemoteNotebookFilePath] = useState<
@@ -170,6 +172,10 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     parsedUrlParams,
   );
 
+  const handleClearUrlParams = useCallback(() => {
+    navigate("?", { replace: true });
+  }, [navigate]);
+
   return (
     <NotebookViewComponent
       width={width}
@@ -201,6 +207,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       setNotebook={setNotebook}
       cellIdRequiringFocus={cellIdRequiringFocus}
       setCellIdRequiringFocus={setCellIdRequiringFocus}
+      onClearUrlParams={handleClearUrlParams}
     />
   );
 };

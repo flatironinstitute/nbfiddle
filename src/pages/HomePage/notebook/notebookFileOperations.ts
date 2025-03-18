@@ -1,4 +1,12 @@
-import { ImmutableCell, ImmutableNotebook, toJS } from "@nteract/commutable";
+import {
+  ImmutableCell,
+  ImmutableNotebook,
+  makeCodeCell,
+  makeMarkdownCell,
+  makeNotebookRecord,
+  toJS,
+} from "@nteract/commutable";
+import { List as ImmutableList, Map as ImmutableMap } from "immutable";
 
 const convertToJupytext = (notebook: ImmutableNotebook): string => {
   let pythonCode = "";
@@ -13,6 +21,71 @@ const convertToJupytext = (notebook: ImmutableNotebook): string => {
   });
 
   return pythonCode;
+};
+
+export const convertFromJupytext = (pythonCode: string): ImmutableNotebook => {
+  const cells: ImmutableCell[] = [];
+  let currentSource = "";
+  let currentType: "code" | "markdown" = "code";
+
+  const lines = pythonCode.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith("# %%")) {
+      // Save previous cell if exists
+      if (currentSource.trim()) {
+        const cell =
+          currentType === "markdown"
+            ? makeMarkdownCell({
+                cell_type: "markdown",
+                source: currentSource.trim(),
+                metadata: ImmutableMap(),
+              })
+            : makeCodeCell({
+                cell_type: "code",
+                source: currentSource.trim(),
+                metadata: ImmutableMap(),
+                execution_count: null,
+                outputs: ImmutableList(),
+              });
+        cells.push(cell);
+        currentSource = "";
+      }
+      // Set type for next cell
+      currentType = line.includes("[markdown]") ? "markdown" : "code";
+    } else {
+      currentSource += line + "\n";
+    }
+  }
+  // Add final cell if exists
+  if (currentSource.trim()) {
+    const cell =
+      currentType === "markdown"
+        ? makeMarkdownCell({
+            cell_type: "markdown",
+            source: currentSource.trim(),
+            metadata: ImmutableMap(),
+          })
+        : makeCodeCell({
+            cell_type: "code",
+            source: currentSource.trim(),
+            metadata: ImmutableMap(),
+            execution_count: null,
+            outputs: ImmutableList(),
+          });
+    cells.push(cell);
+  }
+
+  // Convert cells array to notebook structure
+  const notebook = makeNotebookRecord({
+    cellOrder: ImmutableList(cells.map((_, i) => `cell-${i}`)),
+    cellMap: ImmutableMap(cells.map((cell, i) => [`cell-${i}`, cell])),
+    nbformat: 4,
+    nbformat_minor: 5,
+    metadata: ImmutableMap(),
+  });
+
+  return notebook;
 };
 
 export const downloadJupytext = (
