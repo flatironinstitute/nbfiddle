@@ -2,6 +2,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DownloadIcon from "@mui/icons-material/Download";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import SaveIcon from "@mui/icons-material/Save";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
@@ -27,6 +28,7 @@ import { fromJS } from "@nteract/commutable";
 import CloudSaveDialog from "./CloudSaveDialog";
 import DownloadOptionsDialog from "./DownloadOptionsDialog";
 import FileUploadDialog from "./FileUploadDialog";
+import LocalSaveDialog from "./LocalSaveDialog";
 import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
 
 type ToolbarProps = {
@@ -66,6 +68,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   const [downloadOptionsDialogOpen, setDownloadOptionsDialogOpen] =
     useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [localSaveDialogOpen, setLocalSaveDialogOpen] = useState(false);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
@@ -217,6 +220,15 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title="Save Locally">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setLocalSaveDialogOpen(true)}
+            >
+              <SaveIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Save to cloud">
             <IconButton
               size="small"
@@ -344,6 +356,11 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               ? parsedUrlParams.gistFileMorphed
               : null
         }
+      />
+
+      <LocalSaveDialog
+        open={localSaveDialogOpen}
+        onClose={() => setLocalSaveDialogOpen(false)}
       />
 
       <FileUploadDialog
