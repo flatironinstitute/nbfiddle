@@ -2,9 +2,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DownloadIcon from "@mui/icons-material/Download";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import SaveIcon from "@mui/icons-material/Save";
-import GitHubIcon from "@mui/icons-material/GitHub";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import SaveIcon from "@mui/icons-material/Save";
 import {
   AppBar,
   Box,
@@ -19,17 +18,16 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { ImmutableNotebook } from "@nteract/commutable";
+import { fromJS, ImmutableNotebook } from "@nteract/commutable";
 import { FunctionComponent, useState } from "react";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
+import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
 import { ParsedUrlParams } from "../shared/util/indexedDb";
-import { fromJS } from "@nteract/commutable";
 import CloudSaveDialog from "./CloudSaveDialog";
 import DownloadOptionsDialog from "./DownloadOptionsDialog";
 import FileUploadDialog from "./FileUploadDialog";
 import LocalSaveDialog from "./LocalSaveDialog";
-import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
 
 type ToolbarProps = {
   onSetNotebook: (notebook: ImmutableNotebook) => void;
@@ -107,6 +105,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         ? `${parsedUrlParams.owner}/${parsedUrlParams.gistId}/${parsedUrlParams.gistFileMorphed}`
         : "Invalid parsedUrlParams"
     : null;
+
+  console.log("------------", parsedUrlParams, a);
 
   const status = getConnectionStatus();
   return (
@@ -186,15 +186,9 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               </IconButton>
             </Tooltip>
           )}
-
+          1
           {parsedUrlParams && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <GitHubIcon fontSize="small" />
-              <Tooltip title={a}>
-                <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                  {a}
-                </Typography>
-              </Tooltip>
+            <>
               {hasLocalChanges && (
                 <Typography
                   variant="body2"
@@ -222,7 +216,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                   </IconButton>
                 </Tooltip>
               )}
-            </Box>
+            </>
           )}
         </Box>
 
