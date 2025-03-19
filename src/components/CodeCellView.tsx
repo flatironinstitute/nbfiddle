@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ImmutableCodeCell, ImmutableOutput } from "@nteract/commutable";
 import AnsiToHtml from "ansi-to-html";
 import { FunctionComponent } from "react";
@@ -57,6 +58,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
               const html = ansiToHtml.toHtml(output.text);
               return (
                 <div
+                  className="CodeCellOutput-stream"
                   key={index}
                   style={{ color }}
                   dangerouslySetInnerHTML={{ __html: html }}
@@ -67,15 +69,16 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
               const html = ansiToHtml.toHtml(output.traceback.join("\n"));
               return (
                 <div
+                  className="CodeCellOutput-error"
                   key={index}
                   style={{ color: "darkred" }}
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               );
-            } else if (output.output_type === "execute_result") {
-              const plainText = output.data["text/plain"] || "";
-              return <div key={index}>{plainText}</div>;
-            } else if (output.output_type === "display_data") {
+            } else if (
+              output.output_type === "display_data" ||
+              output.output_type === "execute_result"
+            ) {
               const plainText = output.data["text/plain"] || "";
               if ("image/png" in output.data) {
                 const pngBase64 = output.data["image/png"] || "";
@@ -85,6 +88,14 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                       src={`data:image/png;base64,${pngBase64}`}
                       alt={plainText}
                     />
+                  </div>
+                );
+              } else if ("image/svg+xml" in output.data) {
+                const svgXml = output.data["image/svg+xml"] || "";
+                // this is the actual svg xml, not base64 encoded
+                return (
+                  <div key={index}>
+                    <div dangerouslySetInnerHTML={{ __html: svgXml }} />
                   </div>
                 );
               } else if ("application/vnd.plotly.v1+json" in output.data) {
@@ -103,9 +114,20 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                     config={plotlyJson.config}
                   />
                 );
+              } else if ("text/html" in output.data) {
+                const html = output.data["text/html"];
+                return (
+                  <div
+                    key={index}
+                    dangerouslySetInnerHTML={{ __html: html as string }}
+                  />
+                );
               } else {
+                console.log("Using plain text output", output);
                 return <div key={index}>{plainText}</div>;
               }
+            } else {
+              console.log("Unknown output type", (output as any).output_type);
             }
             return null;
           })}

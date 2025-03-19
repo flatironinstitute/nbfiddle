@@ -19,9 +19,17 @@ const loadFilesFromGist = async (
   for (const fname in gistFiles) {
     const file = gistFiles[fname];
     if (!file) continue;
-    const content = file.content;
-    if (content === undefined) continue;
-    files[fname] = content;
+    if (file.truncated) {
+      const rawUrl = file.raw_url;
+      if (!rawUrl) continue;
+      const r = await fetch(rawUrl);
+      const content = await r.text();
+      files[fname] = content;
+    } else {
+      const content = file.content;
+      if (content === undefined) continue;
+      files[fname] = content;
+    }
   }
   return { files, description };
 };
