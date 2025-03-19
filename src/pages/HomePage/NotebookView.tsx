@@ -17,7 +17,10 @@ import {
   executionReducer,
   initialExecutionState,
 } from "./notebook/notebook-execution";
-import { downloadNotebook } from "./notebook/notebookFileOperations";
+import {
+  convertToJupytext,
+  downloadNotebook,
+} from "./notebook/notebookFileOperations";
 import { useSessionClient } from "./notebook/useSessionClient";
 import NotebookViewComponent from "./NotebookViewComponent";
 import {
@@ -37,6 +40,10 @@ import useCodeCompletions, {
   setCodeCompletionsEnabled,
 } from "./useCodeCompletions";
 import { useHasLocalChanges } from "./utils";
+import {
+  setGlobalAIContext,
+  setGlobalNotebookContent,
+} from "../../chat/sendChatMessage";
 
 setCodeCompletionsEnabled(
   localStorage.getItem("codeCompletionsEnabled") === "1",
@@ -119,6 +126,25 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       localname,
     );
   }, [notebook, parsedUrlParams, localname]);
+
+  // set the AI context
+  useEffect(() => {
+    if (!activeCellId) {
+      setGlobalAIContext("There is no active cell");
+    } else {
+      const cell = notebook.cellMap.get(activeCellId);
+      if (!cell) {
+        setGlobalAIContext("There is no active cell");
+      } else {
+        setGlobalAIContext(
+          `The active cell is a ${cell.cell_type} cell with the following content:\n\n${cell.source}`,
+        );
+      }
+    }
+
+    const jt = convertToJupytext(notebook);
+    setGlobalNotebookContent(jt);
+  }, [notebook, activeCellId]);
 
   const handleDownload = useCallback(() => {
     downloadNotebook(notebook, localname, remoteNotebookFilePath);

@@ -151,7 +151,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
       </div>
       <ScrollY
         width={width}
-        height={height - horizontalMargin * 2}
+        height={height - 70}
         dataTestId="notebook-scroll-container"
       >
         <div style={{ padding: `8px ${leftPadding}px` }}>
@@ -473,6 +473,11 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 Add Markdown Cell
               </button>
             </div>
+            <div>&nbsp;</div>
+            <div>&nbsp;</div>
+            <div>&nbsp;</div>
+            <div>&nbsp;</div>
+            <div>&nbsp;</div>
           </Paper>
         </div>
       </ScrollY>

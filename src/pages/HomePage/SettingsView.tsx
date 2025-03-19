@@ -9,23 +9,35 @@ import {
 type SettingsViewProps = {
   width: number;
   height: number;
+  chatEnabled: boolean;
+  setChatEnabled: (enabled: boolean) => void;
 };
 
 const SettingsView: FunctionComponent<SettingsViewProps> = ({
   width,
   height,
+  chatEnabled,
+  setChatEnabled,
 }) => {
   const [apiKey, setApiKey] = useState(() => getOpenRouterApiKey() || "");
   const [codeCompletionsEnabled, setLocalCodeCompletionsEnabled] = useState(
     () => localStorage.getItem("codeCompletionsEnabled") === "1",
   );
   const [totalCost, setTotalCost] = useState(getTotalCost());
+  const [chatCost, setChatCost] = useState(() =>
+    Number(localStorage.getItem("chatCost") || "0"),
+  );
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTotalCost(getTotalCost());
-    }, 1000);
-    return () => clearInterval(interval);
+    const intervals = [
+      setInterval(() => {
+        setTotalCost(getTotalCost());
+      }, 1000),
+      setInterval(() => {
+        setChatCost(Number(localStorage.getItem("chatCost") || "0"));
+      }, 1000),
+    ];
+    return () => intervals.forEach(clearInterval);
   }, []);
 
   // Effect to handle API key changes
@@ -65,21 +77,54 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
       </Box>
 
       <Box>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={codeCompletionsEnabled}
-              onChange={(e) => setLocalCodeCompletionsEnabled(e.target.checked)}
-              disabled={!apiKey}
-            />
-          }
-          label="Enable code completions"
-        />
-        {codeCompletionsEnabled && (
-          <Box sx={{ mt: 1, color: "text.secondary" }}>
-            Total cost this session: ${totalCost.toFixed(4)}
+        <Box sx={{ mt: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={codeCompletionsEnabled}
+                onChange={(e) =>
+                  setLocalCodeCompletionsEnabled(e.target.checked)
+                }
+                disabled={!apiKey}
+              />
+            }
+            label="Enable code completions"
+          />
+          {codeCompletionsEnabled && (
+            <Box sx={{ mt: 1, ml: 4, color: "text.secondary" }}>
+              Code completions cost this session: ${totalCost.toFixed(4)}
+            </Box>
+          )}
+        </Box>
+
+        <Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={chatEnabled}
+                onChange={(e) => {
+                  localStorage.setItem(
+                    "chatEnabled",
+                    e.target.checked ? "1" : "0",
+                  );
+                  setChatEnabled(e.target.checked);
+                }}
+              />
+            }
+            label="Enable chat"
+          />
+          <Box sx={{ mt: 1, ml: 4, color: "text.secondary", maxWidth: 600 }}>
+            Enables an AI assistant that can help with your notebook work. The
+            assistant has access to your notebook content and knows which cell
+            is currently active, allowing for contextual assistance with your
+            data analysis tasks.
           </Box>
-        )}
+          {chatEnabled && (
+            <Box sx={{ mt: 1, ml: 4, color: "text.secondary" }}>
+              AI assistant cost this session: ${chatCost.toFixed(4)}
+            </Box>
+          )}
+        </Box>
       </Box>
     </Box>
   );

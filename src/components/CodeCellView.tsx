@@ -123,7 +123,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                   />
                 );
               } else {
-                console.log("Using plain text output", output);
+                // console.log("Using plain text output", output);
                 return <div key={index}>{plainText}</div>;
               }
             } else {

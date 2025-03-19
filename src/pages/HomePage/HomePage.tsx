@@ -9,6 +9,8 @@ import SettingsView from "./SettingsView";
 import { ParsedUrlParams } from "../../shared/util/indexedDb";
 import { JupyterConnectivityProvider } from "../../jupyter/JupyterConnectivityProvider";
 import { useLocation } from "react-router-dom";
+import HorizontalSplitter from "@components/HorizontalSplitter";
+import ChatInterface from "../../chat/ChatInterface";
 
 type HomePageProps = { width: number; height: number };
 
@@ -79,6 +81,10 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
     NotebookParams | undefined
   >(undefined);
   const [urlParseError, setUrlParseError] = useState<string | null>(null);
+
+  const [chatEnabled, setChatEnabled] = useState(
+    () => localStorage.getItem("chatEnabled") === "1",
+  );
 
   const location = useLocation();
   const urlSearch = location.search;
@@ -157,13 +163,21 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height: "calc(100% - 36px)",
           }}
         >
-          <NotebookView
+          <HorizontalSplitter
             width={width}
-            height={height - 36}
-            parsedUrlParams={notebookParams.parsedUrlParams}
-            localname={notebookParams.localname}
-            onJupyterConfigClick={() => setSelectedTab(1)}
-          />
+            height={height - 40}
+            initialSplitterPosition={Math.min(350, width / 3)}
+            hideFirstChild={!chatEnabled}
+          >
+            <ChatInterface width={0} height={0} />
+            <NotebookView
+              width={0}
+              height={0}
+              parsedUrlParams={notebookParams.parsedUrlParams}
+              localname={notebookParams.localname}
+              onJupyterConfigClick={() => setSelectedTab(1)}
+            />
+          </HorizontalSplitter>
         </Box>
         <Box
           sx={{
@@ -191,7 +205,12 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height: "calc(100% - 36px)",
           }}
         >
-          <SettingsView width={width} height={height - 36} />
+          <SettingsView
+            width={width}
+            height={height - 36}
+            chatEnabled={chatEnabled}
+            setChatEnabled={setChatEnabled}
+          />
         </Box>
         <Box
           sx={{

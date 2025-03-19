@@ -35,7 +35,22 @@ Here is an example notebook, hosted as a GitHub Gist, with interactive Plotly gr
 - Import `.ipynb` or Jupytext `.py` files from your local machine
 - Connect to a local or public JupyterLab server for code execution
 - Host your own remote JupyterLab server
-- Use experimental AI code completion (requires an OpenRouter key)
+- Use AI-powered features (requires an OpenRouter key):
+  - Code completion for smart suggestions as you type
+  - Chat assistant for contextual help with your notebook
+
+## AI Features
+
+Both the chat assistant and code completion features require an OpenRouter API key, which can be configured in Settings.
+
+### Chat Assistant
+The AI assistant helps you work with your notebooks by:
+- Maintaining awareness of your notebook content and active cell
+- Providing contextual assistance with your data analysis tasks
+
+### Code Completion
+Code completion provides AI-powered suggestions as you type in code cells, with:
+- Smart in-editor code suggestions based on context
 
 ## Notes
 

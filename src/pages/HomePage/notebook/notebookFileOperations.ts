@@ -8,7 +8,7 @@ import {
 import { List as ImmutableList, Map as ImmutableMap } from "immutable";
 import serializeNotebook from "../serializeNotebook";
 
-const convertToJupytext = (notebook: ImmutableNotebook): string => {
+export const convertToJupytext = (notebook: ImmutableNotebook): string => {
   let pythonCode = "";
 
   notebook.cellOrder.forEach((cellId: string) => {

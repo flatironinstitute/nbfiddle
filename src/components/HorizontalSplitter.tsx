@@ -28,6 +28,7 @@ export interface HorizontalSplitterProps {
   height: number;
   initialSplitterPosition: number;
   children: [React.ReactNode, React.ReactNode]; // Exactly two children required
+  hideFirstChild?: boolean;
 }
 
 const SPLITTER_WIDTH = 8; // Width of the splitter handle area in pixels
@@ -37,10 +38,13 @@ const HorizontalSplitter: FunctionComponent<HorizontalSplitterProps> = ({
   height,
   initialSplitterPosition,
   children,
+  hideFirstChild,
 }) => {
-  const [splitterPosition, setSplitterPosition] = useState(
+  const [splitterPosition2, setSplitterPosition] = useState(
     initialSplitterPosition,
   );
+  const splitterPosition = hideFirstChild ? 0 : splitterPosition2;
+
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -125,6 +129,7 @@ const HorizontalSplitter: FunctionComponent<HorizontalSplitterProps> = ({
           width: leftPanelWidth,
           height,
           overflow: "hidden",
+          display: hideFirstChild ? "none" : "block",
         }}
       >
         {React.cloneElement(children[0] as React.ReactElement, {
