@@ -55,7 +55,7 @@ export function saveNotebookToStorageDebounced(
 
 // Database configuration
 const DB_NAME = "nbfiddle";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const NOTEBOOK_STORE = "notebooks";
 const METADATA_STORE = "metadata";
 
@@ -68,22 +68,59 @@ interface NotebookMetadata {
 // Initialize database
 async function initDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let request: IDBOpenDBRequest;
 
-    request.onerror = () => reject(new Error("Failed to open database"));
+    const openDB = () => {
+      request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+      request.onerror = async () => {
+        // If there's an error opening the database, prompt to clear it
+        const shouldClear = window.confirm(
+          "There was a problem initializing the database. Would you like to clear it and try again?",
+        );
+        if (shouldClear) {
+          try {
+            // Delete the entire database
+            const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+            deleteRequest.onsuccess = () => {
+              // Try opening again after deletion
+              openDB();
+            };
+            deleteRequest.onerror = () => {
+              reject(new Error("Failed to clear database"));
+            };
+          } catch (err) {
+            reject(new Error(`Failed to clear database: ${err}`));
+          }
+        } else {
+          reject(new Error("Failed to open database"));
+        }
+      };
 
-      if (!db.objectStoreNames.contains(NOTEBOOK_STORE)) {
-        db.createObjectStore(NOTEBOOK_STORE);
-      }
-      if (!db.objectStoreNames.contains(METADATA_STORE)) {
-        db.createObjectStore(METADATA_STORE);
-      }
+      request.onblocked = () => {
+        reject(
+          new Error(
+            "Database blocked. Please close other tabs using this app and try again.",
+          ),
+        );
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+
+        if (!db.objectStoreNames.contains(NOTEBOOK_STORE)) {
+          db.createObjectStore(NOTEBOOK_STORE);
+        }
+        if (!db.objectStoreNames.contains(METADATA_STORE)) {
+          db.createObjectStore(METADATA_STORE);
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
     };
 
-    request.onsuccess = () => resolve(request.result);
+    // Start the database opening process
+    openDB();
   });
 }
 
