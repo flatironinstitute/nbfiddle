@@ -422,13 +422,9 @@ export const useUpdateGist = (
       if (parsedUrlParams.type !== "gist") {
         throw new Error("Not a Gist");
       }
-      console.log("--- 1");
       const gistUri = `https://gist.github.com/${parsedUrlParams.owner}/${parsedUrlParams.gistId}`;
-      console.log("--- 2");
       const notebookSerialized = serializeNotebook(notebook);
-      console.log("--- 3");
       const notebookJson = JSON.stringify(notebookSerialized, null, 2);
-      console.log("--- 4");
       await updateGitHubGist(
         gistUri,
         {
@@ -438,9 +434,7 @@ export const useUpdateGist = (
           personalAccessToken: token,
         },
       );
-      console.log("--- 5");
       setRemoteNotebook(fromJS(JSON.parse(notebookJson)));
-      console.log("--- 6");
     },
     [notebook, remoteNotebookFilePath, parsedUrlParams, setRemoteNotebook],
   );

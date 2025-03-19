@@ -15,6 +15,7 @@ import {
   ImmutableCodeCell,
   ImmutableMarkdownCell,
   ImmutableNotebook,
+  toJS,
 } from "@nteract/commutable";
 import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import PythonSessionClient from "../../jupyter/PythonSessionClient";
@@ -119,6 +120,17 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
     };
   }, [onShiftEnter, onCtrlEnter]);
 
+  const handleLogCell = (cellId: string) => {
+    const nb = toJS(notebook);
+    const cell = nb.cells.find((c) => c.id === cellId);
+    if (cell) {
+      console.info("Active cell:");
+      console.info(JSON.parse(JSON.stringify(cell)));
+    } else {
+      console.info("Cell not found");
+    }
+  };
+
   const horizontalMargin = 10;
   const maxWidth = 1200;
   const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth) - 15; // - 15 to leave room for the scrollbar
@@ -208,6 +220,8 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 onAddCellAfterCell(activeCellId);
               } else if (event.key === "x" && activeCellId) {
                 onDeleteCell(activeCellId);
+              } else if (event.key === "d" && activeCellId) {
+                handleLogCell(activeCellId);
               } else if (event.key === "Escape") {
                 paperRef.current?.focus();
               }

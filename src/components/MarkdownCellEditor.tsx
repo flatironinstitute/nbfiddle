@@ -64,6 +64,7 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
         [
           monaco.KeyCode.KeyA,
           monaco.KeyCode.KeyB,
+          monaco.KeyCode.KeyD, // nbfiddle debug
           monaco.KeyCode.KeyX,
         ].includes(event.keyCode)
       ) {
