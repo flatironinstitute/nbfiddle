@@ -94,7 +94,7 @@ export const downloadJupytext = (
   remoteNotebookFilePath: string | null,
 ) => {
   const pythonCode = convertToJupytext(notebook);
-  const filename = remoteNotebookFilePath
+  let filename = remoteNotebookFilePath
     ? (remoteNotebookFilePath
         .split("/")
         .pop()
@@ -102,6 +102,9 @@ export const downloadJupytext = (
     : localname
       ? `${localname}.py`
       : "Untitled.py";
+  if (filename.endsWith("-py")) {
+    filename = filename.slice(0, -3) + ".py";
+  }
 
   const blob = new Blob([pythonCode], {
     type: "text/plain",
@@ -127,11 +130,14 @@ export const downloadNotebook = (
   remoteNotebookFilePath: string | null,
 ) => {
   const notebookData = serializeNotebook(notebook);
-  const filename = remoteNotebookFilePath
+  let filename = remoteNotebookFilePath
     ? (remoteNotebookFilePath.split("/").pop() as string)
     : localname
       ? `${localname}.ipynb`
       : "Untitled.ipynb";
+  if (filename.endsWith("-ipynb")) {
+    filename = filename.slice(0, -6) + ".ipynb";
+  }
   const blob = new Blob([JSON.stringify(notebookData, null, 2)], {
     type: "application/json",
   });
