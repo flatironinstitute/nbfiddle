@@ -12,7 +12,7 @@ const AboutView: FunctionComponent<AboutViewProps> = ({ width, height }) => {
 
   useEffect(() => {
     // Fetch README content from the repo URL
-    fetch("https://raw.githubusercontent.com/magland/nbfiddle/main/README.md")
+    fetch("https://raw.githubusercontent.com/flatironinstitute/nbfiddle/main/README.md")
       .then((response) => response.text())
       .then((content) => {
         setReadmeContent(content);
