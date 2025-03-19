@@ -34,15 +34,13 @@ const StoredNotebooksView: React.FC<StoredNotebooksViewProps> = ({
         let type = "Unknown";
 
         if (key.startsWith("local:")) {
-          name = key.substring(6);
+          name = key.split(":")[1];
           type = "Local";
         } else if (key.startsWith("github:")) {
-          const parts = key.split("/");
-          name = parts[parts.length - 1];
+          name = key.split(":")[1];
           type = "GitHub";
         } else if (key.startsWith("gist:")) {
-          const parts = key.split("/");
-          name = parts[parts.length - 1];
+          name = key.split(":")[1];
           type = "Gist";
         }
 
@@ -100,30 +98,50 @@ const StoredNotebooksView: React.FC<StoredNotebooksViewProps> = ({
   };
 
   const columns: GridColDef[] = [
-    { field: "name", headerName: "Name", width: 100 },
-    { field: "type", headerName: "Type", width: 100 },
+    {
+      field: "name",
+      headerName: "Name",
+      flex: 3,
+      minWidth: 150,
+      renderCell: (params: GridRenderCellParams) => (
+        <Box
+          component="span"
+          sx={{
+            cursor: "pointer",
+            color: "primary.main",
+            "&:hover": {
+              textDecoration: "underline",
+            },
+          }}
+          onClick={() => handleOpen(params.row.id)}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+    { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
     {
       field: "size",
       headerName: "Size",
-      width: 100,
+      flex: 1,
+      minWidth: 80,
       valueFormatter: (value) => Math.floor(value / 100) / 10 + " KB",
     },
-    { field: "cells", headerName: "Cells", width: 100 },
+    { field: "cells", headerName: "# cells", flex: 0.5, minWidth: 80 },
     {
       field: "lastModified",
       headerName: "Last Modified",
-      width: 200,
+      flex: 1,
+      minWidth: 180,
       valueFormatter: (value: Date) => value.toLocaleString(),
     },
     {
       field: "actions",
       headerName: "Actions",
-      width: 200,
+      flex: 1,
+      minWidth: 150,
       renderCell: (params: GridRenderCellParams) => (
         <Box>
-          <Button size="small" onClick={() => handleOpen(params.row.id)}>
-            Open
-          </Button>
           <Button
             size="small"
             color="error"

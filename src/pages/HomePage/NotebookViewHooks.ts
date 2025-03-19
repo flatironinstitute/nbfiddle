@@ -66,7 +66,10 @@ export const useScrollToActiveCell = (activeCellId: string | undefined) => {
 
         // if the top of the element is above the visible area, scroll it to the top
         if (elementRect.top < containerRect.top) {
-          scrollContainer.scrollTop += elementRect.top - containerRect.top;
+          // but not if some part of the cell is well visible
+          if (elementRect.top + elementRect.height < containerRect.top + 100) {
+            scrollContainer.scrollTop += elementRect.top - containerRect.top;
+          }
         }
         // if the bottom of the element is below the visible area, scroll it so the bottom
         // ends up 200 pixels above the container's bottom edge

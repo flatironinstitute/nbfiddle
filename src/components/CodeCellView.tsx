@@ -46,6 +46,8 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
             fontFamily: "monospace",
             whiteSpace: "pre-wrap",
             fontSize: 13,
+            width,
+            overflowX: "auto",
           }}
         >
           {cell.outputs.map((output: ImmutableOutput, index: number) => {

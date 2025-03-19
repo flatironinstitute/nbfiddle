@@ -228,6 +228,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 >
                   {((isMobile && cellId === activeCellId) ||
                     (!isMobile && cellId === hoveredCellId)) && (
+                    // tool buttons
                     <div
                       style={{
                         position: "absolute",
@@ -288,8 +289,12 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       </IconButton>
                     </div>
                   )}
-                  <div style={{ display: "flex", alignItems: "flex-start" }}>
+                  <div
+                    className="Cell"
+                    style={{ display: "flex", alignItems: "flex-start" }}
+                  >
                     <div
+                      className="CellLeftPart"
                       style={{
                         width: "50px",
                         display: "flex",
@@ -340,8 +345,26 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                           ▶
                         </button>
                       ) : null}
+                      {cellId === activeCellId &&
+                      cell.cell_type === "code" &&
+                      !sessionClient ? (
+                        <div
+                          style={{
+                            color: "#944",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onJupyterConfigClick?.();
+                          }}
+                          title="Click to configure Jupyter connection"
+                        >
+                          Not connected
+                        </div>
+                      ) : null}
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div className="CellMainPart" style={{ flex: 1 }}>
                       {cell.cell_type === "code" ? (
                         <CodeCellView
                           key={cellId}
