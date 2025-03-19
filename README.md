@@ -44,13 +44,12 @@ Here is an example notebook, hosted as a GitHub Gist, with interactive Plotly gr
 Both the chat assistant and code completion features require an OpenRouter API key, which can be configured in Settings.
 
 ### Chat Assistant
-The AI assistant helps you work with your notebooks by:
-- Maintaining awareness of your notebook content and active cell
-- Providing contextual assistance with your data analysis tasks
+The AI assistant provides a chat assistant to helps with your notebooks
+- Can access the content in the input cells of the notebook
+- Is aware of the active cell
 
 ### Code Completion
-Code completion provides AI-powered suggestions as you type in code cells, with:
-- Smart in-editor code suggestions based on context
+Code completion provides AI-powered suggestions as you type in code cells, with in-editor code suggestions based on context
 
 ## Notes
 
