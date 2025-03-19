@@ -179,6 +179,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               Not connected
             </Typography>
           )}
+          {executingCellId && onCancel && (
+            <Tooltip title="Cancel Execution">
+              <IconButton size="small" color="error" onClick={onCancel}>
+                <CancelIcon />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {parsedUrlParams && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -268,13 +275,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               </IconButton>
             </span>
           </Tooltip>
-          {executingCellId && onCancel && (
-            <Tooltip title="Cancel Execution">
-              <IconButton size="small" color="error" onClick={onCancel}>
-                <CancelIcon />
-              </IconButton>
-            </Tooltip>
-          )}
         </Box>
       </MuiToolbar>
 
