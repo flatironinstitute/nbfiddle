@@ -117,7 +117,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
 
   const horizontalMargin = 10;
   const maxWidth = 1200;
-  const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth);
+  const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth) - 15; // - 15 to leave room for the scrollbar
   const leftPadding = Math.max((width - notebookWidth) / 2, horizontalMargin);
   return (
     <>
@@ -126,21 +126,29 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           {loadError}
         </Alert>
       )}
-      <Toolbar
-        executingCellId={currentCellExecution.executingCellId}
-        onRestartSession={onRestartSession}
-        sessionClient={sessionClient}
-        onCancel={onCancel}
-        parsedUrlParams={parsedUrlParams}
-        hasLocalChanges={hasLocalChanges}
-        onResetToRemote={resetToRemoteVersion}
-        onUpdateGist={onUpdateGist}
-        onSaveGist={onSaveGist}
-        notebook={notebook}
-        onSetNotebook={setNotebook}
-        onClearUrlParams={onClearUrlParams}
-        onJupyterConfigClick={onJupyterConfigClick}
-      />
+      <div
+        style={{
+          position: "relative",
+          left: leftPadding,
+          width: notebookWidth,
+        }}
+      >
+        <Toolbar
+          executingCellId={currentCellExecution.executingCellId}
+          onRestartSession={onRestartSession}
+          sessionClient={sessionClient}
+          onCancel={onCancel}
+          parsedUrlParams={parsedUrlParams}
+          hasLocalChanges={hasLocalChanges}
+          onResetToRemote={resetToRemoteVersion}
+          onUpdateGist={onUpdateGist}
+          onSaveGist={onSaveGist}
+          notebook={notebook}
+          onSetNotebook={setNotebook}
+          onClearUrlParams={onClearUrlParams}
+          onJupyterConfigClick={onJupyterConfigClick}
+        />
+      </div>
       <ScrollY
         width={width}
         height={height - horizontalMargin * 2}
@@ -150,14 +158,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           <Paper
             elevation={1}
             sx={{
-              width:
-                notebookWidth -
-                (leftPadding > horizontalMargin
-                  ? 0
-                  : horizontalMargin * 2 + 25),
+              width: notebookWidth, // figure out a better way to do this
               minHeight: 200,
               backgroundColor: "background.paper",
-              padding: 3,
+              padding: 0,
               borderRadius: 1,
               "&:hover": { boxShadow: 2 },
             }}

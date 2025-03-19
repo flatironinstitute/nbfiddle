@@ -105,7 +105,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
       elevation={0}
       sx={{
         backgroundColor: "background.paper",
-        borderBottom: "1px solid",
+        borderBottom: "3px solid",
+        marginTop: 1,
         borderColor: "divider",
       }}
     >
