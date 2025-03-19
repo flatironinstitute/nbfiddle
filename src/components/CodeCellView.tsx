@@ -138,7 +138,42 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                             line-height: 1.5;
                           }
-                          /* Add other default styles as needed */
+                          table {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                            margin: 1em 0;
+                            font-size: 13px;
+                          }
+                          thead {
+                            border-bottom: 2px solid #ddd;
+                            background-color: #f9f9f9;
+                            text-align: right;
+                          }
+                          tbody tr:nth-child(even) {
+                            background-color: #f5f5f5;
+                          }
+                          tbody tr:hover {
+                            background-color: rgba(66, 165, 245, 0.1);
+                          }
+                          th, td {
+                            padding: 0.5em 1em;
+                            text-align: right;
+                            border: 1px solid #ddd;
+                            max-width: 400px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                          }
+                          th:first-child, td:first-child {
+                            text-align: left;
+                          }
+                          th {
+                            font-weight: bold;
+                            vertical-align: bottom;
+                          }
+                          tr:last-child td {
+                            border-bottom: 1px solid #ddd;
+                          }
                         </style>
                       </head>
                       <body>${html}</body>
