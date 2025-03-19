@@ -382,19 +382,24 @@ export const useSaveGist = (
 ) => {
   return useMemo(
     () => async (token: string, fileName: string) => {
+      console.log("---- 1");
+      const notebookSerialized = serializeNotebook(notebook);
       const gistUri = await saveAsGitHubGist(
         {
-          [fileName]: JSON.stringify(serializeNotebook(notebook), null, 2),
+          [fileName]: JSON.stringify(notebookSerialized, null, 2),
         },
         {
           defaultDescription: "Notebook saved from nbfiddle",
           personalAccessToken: token,
         },
       );
-      setRemoteNotebook(fromJS(serializeNotebook(notebook)));
+      console.log("---- 2");
+      setRemoteNotebook(fromJS(JSON.parse(JSON.stringify(notebookSerialized))));
+      console.log("---- 3");
       // replace special characters with "-"
       const morphedFileName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
       const gistFileUri = `${gistUri}#file-${morphedFileName}`;
+      console.log("---- 4");
       return gistFileUri;
     },
     [notebook, setRemoteNotebook],

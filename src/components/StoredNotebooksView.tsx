@@ -75,14 +75,28 @@ const StoredNotebooksView: React.FC<StoredNotebooksViewProps> = ({
   const handleOpen = (key: string) => {
     const searchParams = new URLSearchParams();
     if (key.startsWith("local:")) {
-      searchParams.set("localname", key.substring(6));
-    } else if (key.startsWith("github:") || key.startsWith("gist:")) {
-      const url = key.startsWith("github:")
-        ? `https://github.com/${key.substring(7)}`
-        : `https://gist.github.com/${key.substring(5)}`;
-      searchParams.set("url", url);
+      navigate(`?localname=${key.substring("local:".length)}`);
+    } else if (key.startsWith("github:")) {
+      const owner = key.substring("github:".length).split("/")[0];
+      const repo = key.substring("github:".length).split("/")[1];
+      const branch = key.substring("github:".length).split("/")[2];
+      const path = key
+        .substring("github:".length)
+        .split("/")
+        .slice(3)
+        .join("/");
+      navigate(
+        `?url=https://github.com/${owner}/${repo}/blob/${branch}/${path}`,
+      );
+    } else if (key.startsWith("gist:")) {
+      const owner = key.substring("gist:".length).split("/")[0];
+      const gistId = key.substring("gist:".length).split("/")[1];
+      const fileName = key.substring("gist:".length).split("/")[2];
+      const morphedFileName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
+      navigate(
+        `?url=https://gist.github.com/${owner}/${gistId}%23file-${morphedFileName}`,
+      );
     }
-    navigate(`?${searchParams.toString()}`);
     onOpenNotebook?.();
   };
 
