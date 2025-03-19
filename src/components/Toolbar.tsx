@@ -4,6 +4,9 @@ import DownloadIcon from "@mui/icons-material/Download";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ClearAllIcon from "@mui/icons-material/ClearAll";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import {
   AppBar,
   Box,
@@ -14,12 +17,15 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Menu,
+  MenuItem,
   Toolbar as MuiToolbar,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { fromJS, ImmutableNotebook } from "@nteract/commutable";
 import { FunctionComponent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
 import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
@@ -33,6 +39,8 @@ type ToolbarProps = {
   onSetNotebook: (notebook: ImmutableNotebook) => void;
   onClearUrlParams: () => void;
   onJupyterConfigClick?: () => void;
+  onClearOutputs?: () => void;
+  onClearNotebook?: () => void;
   executingCellId: string | null;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
@@ -59,7 +67,10 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onSetNotebook,
   onClearUrlParams,
   onJupyterConfigClick,
+  onClearOutputs,
+  onClearNotebook,
 }) => {
+  const navigate = useNavigate();
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [cloudSaveDialogOpen, setCloudSaveDialogOpen] = useState(false);
@@ -67,6 +78,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [localSaveDialogOpen, setLocalSaveDialogOpen] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(menuAnchorEl);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
@@ -224,42 +237,100 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Import Notebook">
+
+          <Tooltip title="Notebook Actions">
             <IconButton
               size="small"
               color="primary"
-              onClick={() => setUploadDialogOpen(true)}
+              onClick={(event) => setMenuAnchorEl(event.currentTarget)}
             >
-              <FileUploadIcon />
+              <MoreVertIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Download Notebook">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => setDownloadOptionsDialogOpen(true)}
+
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={menuOpen}
+            onClose={() => setMenuAnchorEl(null)}
+          >
+            <MenuItem
+              onClick={() => {
+                setUploadDialogOpen(true);
+                setMenuAnchorEl(null);
+              }}
             >
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Save Locally">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => setLocalSaveDialogOpen(true)}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <FileUploadIcon fontSize="small" />
+                <Typography>Import notebook</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setDownloadOptionsDialogOpen(true);
+                setMenuAnchorEl(null);
+              }}
             >
-              <SaveIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Save to cloud">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => setCloudSaveDialogOpen(true)}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <DownloadIcon fontSize="small" />
+                <Typography>Download notebook</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setLocalSaveDialogOpen(true);
+                setMenuAnchorEl(null);
+              }}
             >
-              <CloudUploadIcon />
-            </IconButton>
-          </Tooltip>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <SaveIcon fontSize="small" />
+                <Typography>Save locally</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setCloudSaveDialogOpen(true);
+                setMenuAnchorEl(null);
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CloudUploadIcon fontSize="small" />
+                <Typography>Save to cloud</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                onClearOutputs?.();
+                setMenuAnchorEl(null);
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <ClearAllIcon fontSize="small" />
+                <Typography>Clear all outputs</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                onClearNotebook?.();
+                setMenuAnchorEl(null);
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <DeleteSweepIcon fontSize="small" />
+                <Typography>Clear notebook</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                navigate("?localname=default");
+                setMenuAnchorEl(null);
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <RestartAltIcon fontSize="small" />
+                <Typography>Open default notebook</Typography>
+              </Box>
+            </MenuItem>
+          </Menu>
         </Box>
       </MuiToolbar>
 

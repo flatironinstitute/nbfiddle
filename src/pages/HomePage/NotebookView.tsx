@@ -1,4 +1,9 @@
-import { emptyNotebook, ImmutableNotebook } from "@nteract/commutable";
+import {
+  emptyNotebook,
+  fromJS,
+  ImmutableNotebook,
+  toJS,
+} from "@nteract/commutable";
 import {
   FunctionComponent,
   useCallback,
@@ -216,6 +221,23 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     navigate("?", { replace: true });
   }, [navigate]);
 
+  // TODO: Implement clearing all outputs from notebook cells
+  const handleClearOutputs = useCallback(() => {
+    const newNotebook = toJS(notebook);
+    for (const cell of newNotebook.cells) {
+      if (cell.cell_type === "code") {
+        cell.outputs = [];
+      }
+    }
+    setNotebook(fromJS(newNotebook));
+  }, [notebook]);
+
+  // TODO: Implement clearing entire notebook
+  const handleClearNotebook = useCallback(() => {
+    setNotebook(emptyNotebook);
+    setActiveCellId(undefined);
+  }, []);
+
   return (
     <NotebookViewComponent
       width={width}
@@ -249,6 +271,8 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       setCellIdRequiringFocus={setCellIdRequiringFocus}
       onClearUrlParams={handleClearUrlParams}
       onJupyterConfigClick={onJupyterConfigClick}
+      onClearOutputs={handleClearOutputs}
+      onClearNotebook={handleClearNotebook}
     />
   );
 };

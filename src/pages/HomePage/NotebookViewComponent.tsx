@@ -30,6 +30,8 @@ type NotebookViewComponentProps = {
   currentCellExecution: ExecutionState;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
+  onClearOutputs: () => void;
+  onClearNotebook: () => void;
   onCancel: () => void;
   onSaveGist: (token: string, fileName: string) => Promise<string>;
   onUpdateGist: (token: string) => Promise<void>;
@@ -62,6 +64,8 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   currentCellExecution,
   onRestartSession,
   sessionClient,
+  onClearOutputs,
+  onClearNotebook,
   onCancel,
   onSaveGist,
   onUpdateGist,
@@ -147,6 +151,8 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           onSetNotebook={setNotebook}
           onClearUrlParams={onClearUrlParams}
           onJupyterConfigClick={onJupyterConfigClick}
+          onClearOutputs={onClearOutputs}
+          onClearNotebook={onClearNotebook}
         />
       </div>
       <ScrollY

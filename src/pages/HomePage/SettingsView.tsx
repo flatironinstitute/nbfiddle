@@ -109,6 +109,7 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
                   );
                   setChatEnabled(e.target.checked);
                 }}
+                disabled={!apiKey}
               />
             }
             label="Enable chat"

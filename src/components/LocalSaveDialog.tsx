@@ -24,10 +24,7 @@ const LocalSaveDialog: FunctionComponent<LocalSaveDialogProps> = ({
   const handleSave = () => {
     const cleanName = name.trim();
     if (cleanName) {
-      // Update URL with localname parameter
-      const searchParams = new URLSearchParams(window.location.search);
-      searchParams.set("localname", cleanName);
-      navigate(`?${searchParams.toString()}`, { replace: true });
+      navigate(`?localname=${cleanName}`, { replace: true });
       onClose();
     }
   };
