@@ -147,7 +147,7 @@ const StoredNotebooksView: React.FC<StoredNotebooksViewProps> = ({
             color="error"
             onClick={() => handleDelete(params.row.id)}
           >
-            Delete
+            Delete local copy
           </Button>
         </Box>
       ),
