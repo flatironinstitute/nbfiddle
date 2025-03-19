@@ -14,8 +14,9 @@ import { getAllTools } from "./allTools";
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const constructInitialSystemMessage = async () => {
-  let d = `
-You are a helpful technical assistant.
+  let d = ``;
+
+  d += `You are a helpful technical assistant.
 
 The user is viewing a web application called nbfiddle, a tool for creating and sharing Python Jupyter notebooks.
 
@@ -41,6 +42,11 @@ If you generate a script to create a plot, your response should be a suitable ca
 Here is the content of the notebook:
 ${getGlobalNotebookContent()}
 `;
+
+  // Add parent window context if available
+  if (globalData.parentWindowContext) {
+    d += `Here is additional context:\n${globalData.parentWindowContext}\n\n`;
+  }
 
   return d;
 };
@@ -288,10 +294,23 @@ const handleToolCall = async (
 const globalData: {
   aiContext: string;
   notebookContent: string;
+  parentWindowContext: string;
 } = {
   aiContext: "",
   notebookContent: "",
+  parentWindowContext: "",
 };
+
+// Listen for messages from parent window
+if (window.parent !== window) {
+  window.addEventListener("message", (event) => {
+    // Validate message origin here if needed
+    if (event.data?.type === "nbfiddle_parent_context") {
+      globalData.parentWindowContext = event.data.context;
+    }
+  });
+}
+
 export const getGlobalAIContext = () => globalData.aiContext;
 export const setGlobalAIContext = (aiContext: string) => {
   globalData.aiContext = aiContext;
