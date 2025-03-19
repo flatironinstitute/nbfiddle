@@ -7,12 +7,12 @@ import {
   insertCellAfter,
 } from "@nteract/commutable";
 import { useCallback, useEffect, useMemo } from "react";
-import PythonSessionClient from "src/jupyter/PythonSessionClient";
+import PythonSessionClient from "../../jupyter/PythonSessionClient";
 import saveAsGitHubGist, {
   updateGitHubGist,
 } from "../../gists/saveAsGitHubGist";
 import {
-  fetchNotebook,
+  fetchRemoteNotebook,
   loadNotebookFromStorage,
   ParsedUrlParams,
 } from "../../shared/util/indexedDb";
@@ -66,13 +66,11 @@ export const useScrollToActiveCell = (activeCellId: string | undefined) => {
 
         // if the top of the element is above the visible area, scroll it to the top
         if (elementRect.top < containerRect.top) {
-          console.log("---- 1");
           scrollContainer.scrollTop += elementRect.top - containerRect.top;
         }
         // if the bottom of the element is below the visible area, scroll it so the bottom
         // ends up 200 pixels above the container's bottom edge
         else if (elementRect.top > containerRect.bottom - aa) {
-          console.log("---- 2");
           scrollContainer.scrollTop +=
             elementRect.top - (containerRect.bottom - aa);
         }
@@ -95,14 +93,12 @@ export const useLoadRemoteNotebook = (
     try {
       setLoadError(undefined);
       const { notebookContent: notebookData, filePath: notebookFilePath } =
-        await fetchNotebook(parsedUrlParams);
+        await fetchRemoteNotebook(parsedUrlParams);
       const reconstructedNotebook: ImmutableNotebook = fromJS(notebookData);
       setRemoteNotebook(reconstructedNotebook);
       setRemoteNotebookFilePath(notebookFilePath);
-      const localModifiedNotebook = await loadNotebookFromStorage(
-        parsedUrlParams,
-        localname,
-      );
+      const x = await loadNotebookFromStorage(parsedUrlParams, localname);
+      const localModifiedNotebook = x?.notebook;
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
         localModifiedNotebook ? fromJS(localModifiedNotebook) : null;
       const notebook0 =
@@ -142,9 +138,9 @@ export const useLoadSavedNotebook = (
       loadRemoteNotebook();
     } else {
       loadNotebookFromStorage(parsedUrlParams, localname)
-        .then((savedNotebook) => {
-          if (savedNotebook) {
-            const reconstructedNotebook = fromJS(savedNotebook);
+        .then((x) => {
+          if (x) {
+            const reconstructedNotebook = fromJS(x.notebook);
             setNotebook(reconstructedNotebook);
             if (reconstructedNotebook.cellOrder.size > 0) {
               setActiveCellId(reconstructedNotebook.cellOrder.first());
@@ -180,6 +176,7 @@ export const useExecute = (
 ) => {
   return useCallback(
     async ({ advance }: { advance: boolean }) => {
+      console.log("---------------------------------------- EEEEE");
       if (currentCellExecution.executingCellId) {
         console.warn("Cell already executing");
         return;
@@ -189,7 +186,6 @@ export const useExecute = (
       if (!cell) return;
 
       let newNotebook = notebook;
-      console.log("---- executing", serializeNotebook(newNotebook).cells);
       if (cell.cell_type === "code") {
         if (!sessionClient) {
           console.warn("Python session client not available");
@@ -208,6 +204,7 @@ export const useExecute = (
           newCodeCell.get("source"),
           sessionClient,
           (outputs) => {
+            console.log("---- outputs length:", outputs.size);
             const newCodeCell = codeCell.set("outputs", outputs);
             newNotebook = newNotebook.setIn(
               ["cellMap", activeCellId],

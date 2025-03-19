@@ -2,10 +2,6 @@
 
 import loadFilesFromGist from "../../gists/loadFilesFromGist";
 
-const DB_NAME = "nbfiddle";
-const STORE_NAME = "notebooks";
-const DB_VERSION = 1;
-
 export type ParsedUrlParams =
   | {
       type: "github";
@@ -21,22 +17,6 @@ export type ParsedUrlParams =
       gistFileMorphed: string;
     };
 
-export async function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-  });
-}
-
 function getStorageKey(
   parsedUrlParams: ParsedUrlParams | null,
   localname?: string,
@@ -45,7 +25,7 @@ function getStorageKey(
     return `local:${localname}`;
   }
   if (!parsedUrlParams) {
-    return "local";
+    return `local:default`;
   }
   if (parsedUrlParams.type === "github") {
     return `github:${parsedUrlParams.owner}/${parsedUrlParams.repo}/${parsedUrlParams.branch}/${parsedUrlParams.path}`;
@@ -73,40 +53,225 @@ export function saveNotebookToStorageDebounced(
   }
 }
 
+// Database configuration
+const DB_NAME = "nbfiddle";
+const DB_VERSION = 1;
+const NOTEBOOK_STORE = "notebooks";
+const METADATA_STORE = "metadata";
+
+interface NotebookMetadata {
+  size: number;
+  numCells: number;
+  lastModified: string;
+}
+
+// Initialize database
+async function initDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => reject(new Error("Failed to open database"));
+
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+
+      if (!db.objectStoreNames.contains(NOTEBOOK_STORE)) {
+        db.createObjectStore(NOTEBOOK_STORE);
+      }
+      if (!db.objectStoreNames.contains(METADATA_STORE)) {
+        db.createObjectStore(METADATA_STORE);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+// Helper to calculate notebook metadata
+function calculateMetadata(notebook: any): NotebookMetadata {
+  return {
+    size: JSON.stringify(notebook).length,
+    numCells: notebook.cells?.length || 0,
+    lastModified: new Date().toISOString(),
+  };
+}
+
 export async function saveNotebookToStorage(
   notebook: any,
   parsedUrlParams: ParsedUrlParams | null,
   localname?: string,
 ): Promise<void> {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey(parsedUrlParams, localname);
-    const request = store.put(notebook, storageKey);
+  try {
+    const db = await initDB();
+    const key = getStorageKey(parsedUrlParams, localname);
+    const metadata = calculateMetadata(notebook);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(
+        [NOTEBOOK_STORE, METADATA_STORE],
+        "readwrite",
+      );
+
+      transaction.onerror = () => reject(new Error("Failed to save notebook"));
+
+      // Save notebook content
+      const notebookStore = transaction.objectStore(NOTEBOOK_STORE);
+      const notebookRequest = notebookStore.put(notebook, key);
+
+      notebookRequest.onerror = () =>
+        reject(new Error("Failed to save notebook content"));
+
+      // Save metadata separately
+      const metadataStore = transaction.objectStore(METADATA_STORE);
+      const metadataRequest = metadataStore.put(metadata, key);
+
+      metadataRequest.onerror = () =>
+        reject(new Error("Failed to save notebook metadata"));
+
+      transaction.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+    });
+  } catch (error) {
+    console.error("Error in saveNotebookToStorage:", error);
+    throw error;
+  }
+}
+
+export async function listStoredNotebooks(): Promise<
+  { key: string; metadata: NotebookMetadata }[]
+> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction([METADATA_STORE], "readonly");
+    const metadataStore = transaction.objectStore(METADATA_STORE);
+
+    return new Promise((resolve, reject) => {
+      const request = metadataStore.getAllKeys();
+
+      request.onerror = () => reject(new Error("Failed to list notebooks"));
+
+      request.onsuccess = async () => {
+        const keys = request.result;
+        const notebooks: { key: string; metadata: NotebookMetadata }[] = [];
+
+        for (const key of keys) {
+          const metadataReq = metadataStore.get(key);
+
+          try {
+            const metadata = await new Promise<NotebookMetadata>((res, rej) => {
+              metadataReq.onsuccess = () => res(metadataReq.result);
+              metadataReq.onerror = () =>
+                rej(new Error(`Failed to get metadata: ${key}`));
+            });
+
+            if (metadata) {
+              notebooks.push({
+                key: key as string,
+                metadata,
+              });
+            }
+          } catch (error) {
+            console.error(`Error loading metadata for ${key}:`, error);
+            // Continue with other notebooks even if one fails
+          }
+        }
+
+        db.close();
+        resolve(notebooks);
+      };
+    });
+  } catch (error) {
+    console.error("Error in listStoredNotebooks:", error);
+    throw error;
+  }
+}
+
+export async function deleteNotebookFromStorage(key: string): Promise<void> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction(
+      [NOTEBOOK_STORE, METADATA_STORE],
+      "readwrite",
+    );
+
+    return new Promise((resolve, reject) => {
+      transaction.onerror = () =>
+        reject(new Error("Failed to delete notebook"));
+
+      // Delete from both stores
+      const notebookStore = transaction.objectStore(NOTEBOOK_STORE);
+      const metadataStore = transaction.objectStore(METADATA_STORE);
+
+      const notebookRequest = notebookStore.delete(key);
+      const metadataRequest = metadataStore.delete(key);
+
+      notebookRequest.onerror = () =>
+        reject(new Error("Failed to delete notebook content"));
+      metadataRequest.onerror = () =>
+        reject(new Error("Failed to delete notebook metadata"));
+
+      transaction.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+    });
+  } catch (error) {
+    console.error("Error in deleteNotebookFromStorage:", error);
+    throw error;
+  }
 }
 
 export async function loadNotebookFromStorage(
   parsedUrlParams: ParsedUrlParams | null,
   localname?: string,
-): Promise<any | null> {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const storageKey = getStorageKey(parsedUrlParams, localname);
-    const request = store.get(storageKey);
+): Promise<{ notebook: any; metadata: NotebookMetadata } | null> {
+  try {
+    const db = await initDB();
+    const key = getStorageKey(parsedUrlParams, localname);
+    const transaction = db.transaction(
+      [NOTEBOOK_STORE, METADATA_STORE],
+      "readonly",
+    );
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
+    return new Promise((resolve, reject) => {
+      const notebookStore = transaction.objectStore(NOTEBOOK_STORE);
+      const metadataStore = transaction.objectStore(METADATA_STORE);
+
+      const notebookRequest = notebookStore.get(key);
+      const metadataRequest = metadataStore.get(key);
+
+      notebookRequest.onerror = () =>
+        reject(new Error("Failed to load notebook"));
+      metadataRequest.onerror = () =>
+        reject(new Error("Failed to load notebook metadata"));
+
+      transaction.oncomplete = () => {
+        const notebook = notebookRequest.result;
+        const metadata = metadataRequest.result;
+
+        db.close();
+
+        if (!notebook || !metadata) {
+          resolve(null);
+          return;
+        }
+
+        // Return notebook and metadata separately
+        resolve({
+          notebook,
+          metadata,
+        });
+      };
+    });
+  } catch (error) {
+    console.error("Error in loadNotebookFromStorage:", error);
+    throw error;
+  }
 }
 
-export async function fetchNotebook(params: ParsedUrlParams): Promise<{
+export async function fetchRemoteNotebook(params: ParsedUrlParams): Promise<{
   notebookContent: any;
   filePath: any;
 }> {

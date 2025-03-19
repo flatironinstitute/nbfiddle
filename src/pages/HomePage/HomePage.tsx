@@ -3,6 +3,7 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { Tabs, Tab, Box } from "@mui/material";
 import NotebookView from "./NotebookView";
 import JupyterConfigurationView from "../../jupyter/JupyterConfigurationView";
+import StorageView from "./StorageView";
 import AboutView from "./AboutView";
 import SettingsView from "./SettingsView";
 import { ParsedUrlParams } from "../../shared/util/indexedDb";
@@ -142,6 +143,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
           >
             <Tab label="Notebook" />
             <Tab label="Jupyter Config" />
+            <Tab label="Storage" />
             <Tab label="Settings" />
             <Tab label="About" />
           </Tabs>
@@ -174,11 +176,23 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height: "calc(100% - 36px)",
           }}
         >
-          <SettingsView width={width} height={height - 36} />
+          <StorageView
+            width={width}
+            height={height - 36}
+            onOpenNotebook={() => setSelectedTab(0)}
+          />
         </Box>
         <Box
           sx={{
             display: selectedTab === 3 ? "block" : "none",
+            height: "calc(100% - 36px)",
+          }}
+        >
+          <SettingsView width={width} height={height - 36} />
+        </Box>
+        <Box
+          sx={{
+            display: selectedTab === 4 ? "block" : "none",
             height: "calc(100% - 36px)",
           }}
         >

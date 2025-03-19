@@ -19,6 +19,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^6.4.2",
     "@mui/material": "^6.4.2",
+    "@mui/x-data-grid": "^7.28.0",
     "@nteract/commutable": "^7.5.1",
     "@octokit/rest": "^21.1.1",
     "@types/react-plotly.js": "^2.6.3",

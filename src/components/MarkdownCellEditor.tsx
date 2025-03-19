@@ -2,47 +2,19 @@ import Editor, { OnMount } from "@monaco-editor/react";
 import { ImmutableMarkdownCell } from "@nteract/commutable";
 import * as monaco from "monaco-editor";
 import { FunctionComponent, useCallback, useEffect, useRef } from "react";
+import getGlobalEnterPressManager from "./globalEnterPressManager";
 
 type MarkdownCellEditorProps = {
   width: number;
   cell: ImmutableMarkdownCell;
   onChange: (cell: ImmutableMarkdownCell) => void;
-  onShiftEnter: () => void;
-  onCtrlEnter: () => void;
   requiresFocus?: boolean;
-};
-
-// we need to do it this way because of some annoying issues with the monaco editor
-
-const globalEnterPressManager = {
-  shiftEnterCallbacks: [] as (() => void)[],
-  ctrlEnterCallbacks: [] as (() => void)[],
-  registerShiftEnterCallback: (callback: () => void) => {
-    globalEnterPressManager.shiftEnterCallbacks.push(callback);
-  },
-  registerCtrlEnterCallback: (callback: () => void) => {
-    globalEnterPressManager.ctrlEnterCallbacks.push(callback);
-  },
-  unregisterShiftEnterCallback: (callback: () => void) => {
-    globalEnterPressManager.shiftEnterCallbacks =
-      globalEnterPressManager.shiftEnterCallbacks.filter(
-        (cb) => cb !== callback,
-      );
-  },
-  unregisterCtrlEnterCallback: (callback: () => void) => {
-    globalEnterPressManager.ctrlEnterCallbacks =
-      globalEnterPressManager.ctrlEnterCallbacks.filter(
-        (cb) => cb !== callback,
-      );
-  },
 };
 
 const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
   width,
   cell,
   onChange,
-  onShiftEnter,
-  onCtrlEnter,
   requiresFocus,
 }) => {
   const handleEditorChange = (value: string | undefined) => {
@@ -54,22 +26,37 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  useEffect(() => {
-    globalEnterPressManager.registerShiftEnterCallback(onShiftEnter);
-    globalEnterPressManager.registerCtrlEnterCallback(onCtrlEnter);
-
-    return () => {
-      globalEnterPressManager.unregisterShiftEnterCallback(onShiftEnter);
-      globalEnterPressManager.unregisterCtrlEnterCallback(onCtrlEnter);
-    };
-  }, [onShiftEnter, onCtrlEnter]);
-
   const handleEditorMount: OnMount = useCallback((editor) => {
-    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-      globalEnterPressManager.shiftEnterCallbacks.forEach((cb) => cb());
+    // Create and register the focused context key
+    const focusedContextKey = editor.createContextKey<boolean>(
+      "editorFocused",
+      false,
+    );
+
+    // we need to disable the default behavior of the editor for the following key commands:
+    // - Shift + Enter
+    // - Ctrl + Enter
+    editor.addCommand(
+      monaco.KeyMod.Shift | monaco.KeyCode.Enter,
+      () => {
+        getGlobalEnterPressManager().shiftEnterCallbacks.forEach((cb) => cb());
+      },
+      "editorFocused",
+    );
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+      () => {
+        getGlobalEnterPressManager().ctrlEnterCallbacks.forEach((cb) => cb());
+      },
+      "editorFocused",
+    );
+
+    // Update context key based on focus state
+    editor.onDidFocusEditorText(() => {
+      focusedContextKey.set(true);
     });
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      globalEnterPressManager.ctrlEnterCallbacks.forEach((cb) => cb());
+    editor.onDidBlurEditorText(() => {
+      focusedContextKey.set(false);
     });
 
     editor.onKeyDown((event) => {

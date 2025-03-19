@@ -16,10 +16,11 @@ import {
   ImmutableMarkdownCell,
   ImmutableNotebook,
 } from "@nteract/commutable";
-import { FunctionComponent, useState } from "react";
-import PythonSessionClient from "src/jupyter/PythonSessionClient";
+import { FunctionComponent, useCallback, useEffect, useState } from "react";
+import PythonSessionClient from "../../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../../shared/util/indexedDb";
 import { ExecutionState } from "./notebook/notebook-execution";
+import getGlobalEnterPressManager from "@components/globalEnterPressManager";
 
 type NotebookViewComponentProps = {
   width: number;
@@ -90,6 +91,30 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
     Set<string>
   >(new Set());
 
+  const onShiftEnter = useCallback(() => {
+    setMarkdownCellIdsBeingEdited(
+      (x) => new Set([...x].filter((a) => a !== activeCellId)),
+    );
+    onExecute({ advance: true });
+  }, [onExecute, activeCellId]);
+
+  const onCtrlEnter = useCallback(() => {
+    setMarkdownCellIdsBeingEdited(
+      (x) => new Set([...x].filter((a) => a !== activeCellId)),
+    );
+    onExecute({ advance: false });
+  }, [onExecute, activeCellId]);
+
+  useEffect(() => {
+    getGlobalEnterPressManager().registerShiftEnterCallback(onShiftEnter);
+    getGlobalEnterPressManager().registerCtrlEnterCallback(onCtrlEnter);
+
+    return () => {
+      getGlobalEnterPressManager().unregisterShiftEnterCallback(onShiftEnter);
+      getGlobalEnterPressManager().unregisterCtrlEnterCallback(onCtrlEnter);
+    };
+  }, [onShiftEnter, onCtrlEnter]);
+
   const horizontalMargin = 10;
   const maxWidth = 1200;
   const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth);
@@ -149,6 +174,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       (x) => new Set([...x].filter((a) => a !== activeCellId)),
                     );
                   }
+                  console.log(
+                    "------- oe1 ===========================================",
+                  );
                   onExecute({ advance: true });
                 } else if (event.ctrlKey || event.metaKey) {
                   if (
@@ -159,6 +187,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       (x) => new Set([...x].filter((a) => a !== activeCellId)),
                     );
                   }
+                  console.log(
+                    "------- oe2 ===========================================",
+                  );
                   onExecute({ advance: false });
                 }
               } else if (event.key === "ArrowUp") {
@@ -298,6 +329,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                                   new Set([...x].filter((a) => a !== cellId)),
                               );
                             }
+                            console.log(
+                              "------- oe3 ===========================================",
+                            );
                             onExecute({ advance: true });
                           }}
                           style={{
@@ -322,8 +356,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                           key={cellId}
                           width={notebookWidth - 120} // figure out a better way to do this
                           cell={cell}
-                          onShiftEnter={() => onExecute({ advance: true })}
-                          onCtrlEnter={() => onExecute({ advance: false })}
                           onChange={(newCell: ImmutableCodeCell) => {
                             const newNotebook = notebook.setIn(
                               ["cellMap", cellId],

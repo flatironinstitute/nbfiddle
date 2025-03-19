@@ -8,8 +8,6 @@ interface CodeCellViewProps {
   width: number;
   cell: ImmutableCodeCell;
   onChange: (cell: ImmutableCodeCell) => void;
-  onShiftEnter: () => void;
-  onCtrlEnter: () => void;
   requiresFocus?: boolean;
   onFocus?: () => void;
 }
@@ -18,8 +16,6 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
   width,
   cell,
   onChange,
-  onShiftEnter,
-  onCtrlEnter,
   requiresFocus,
   onFocus,
 }) => {
@@ -37,8 +33,6 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
       <CodeCellEditor
         cell={cell}
         onChange={onChange}
-        onShiftEnter={onShiftEnter}
-        onCtrlEnter={onCtrlEnter}
         requiresFocus={requiresFocus}
         onFocus={onFocus}
       />
@@ -76,6 +70,9 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               );
+            } else if (output.output_type === "execute_result") {
+              const plainText = output.data["text/plain"] || "";
+              return <div key={index}>{plainText}</div>;
             } else if (output.output_type === "display_data") {
               const plainText = output.data["text/plain"] || "";
               if ("image/png" in output.data) {
