@@ -367,9 +367,17 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           // Clear URL params without reloading
           onClearUrlParams();
         }}
-        onContentPasted={(jupytext) => {
+        onContentPasted={(jupytextOrIpynb) => {
           // Convert from jupytext
-          const notebook = convertFromJupytext(jupytext);
+          let notebook: ImmutableNotebook;
+          try {
+            // try to parse as json - then it's an ipynb
+            const notebookData = JSON.parse(jupytextOrIpynb);
+            notebook = fromJS(notebookData);
+          } catch {
+            // otherwise we assume jupytext
+            notebook = convertFromJupytext(jupytextOrIpynb);
+          }
           // Clear URL params first
           onClearUrlParams();
           onSetNotebook(notebook);

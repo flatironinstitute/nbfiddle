@@ -101,7 +101,7 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
         </Box>
 
         <Typography variant="subtitle1" gutterBottom>
-          Option 2: Paste Jupytext content
+          Option 2: Paste Jupytext or IPython notebook content
         </Typography>
         <TextField
           multiline

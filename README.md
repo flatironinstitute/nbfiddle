@@ -2,20 +2,24 @@
 
 [nbfiddle.org](https://nbfiddle.org) – A streamlined approach to Python Jupyter notebooks
 
+[View the source code on GitHub or submit an issue](https://github.com/flatironinstitute/nbfiddle)
+
 ## Overview
 
 nbfiddle is a web-based Jupyter notebook interface that leverages your browser’s storage for saving and managing notebooks. It is designed for self-contained Python notebooks that focus on data analysis, particularly when working with remote data sources such as the DANDI archive.
 
+Here is an example notebook, hosted as a GitHub Gist, with interactive Plotly graphs when opened in nbfiddle: [plotly-demo-for-nbfiddle.ipynb](https://nbfiddle.org/?url=https://gist.github.com/magland/366cfffb025dd3cfee27e5cadb3d7f53%23file-plotly-demo-for-nbfiddle-ipynb)
+
 ## Use Cases
 
-1. **Viewing a Notebook on GitHub**
+1. **Opening a Notebook hosted on GitHub**
    Typically, to interact with a notebook on GitHub, you need to clone the repository or download the notebook, then open it in JupyterLab or VS Code. With nbfiddle, you simply use the notebook’s GitHub URL as a query parameter to launch an interactive version immediately. If you want to run the code, you can connect to a local JupyterLab server or use a publicly hosted server. Your edits are stored in your browser, but the link to the original GitHub version remains, so you can revert at any time. This approach removes the need to manage local files and lets you share an interactive notebook URL with colleagues—no downloads required.
 
 2. **Publishing and Sharing Your Notebook**
    If you want to share a notebook, you might normally push it to a Git repository. With nbfiddle, you can publish your notebook directly to a GitHub Gist and instantly share the link. As you continue refining the notebook, it’s easy to push updates back to that same Gist.
 
 3. **Quick Local Experiments**
-   For quick experimentation, it’s common to end up with many local files named `Untitled (x).ipynb`. With nbfiddle, you can start a new notebook without creating any local files—everything lives in your browser’s storage. If you do decide you’d like a copy on disk, you can download it any time.
+   For quick experimentation, it’s common to end up with many local files named `Untitled (x).ipynb`. With nbfiddle, you can start a new notebook without creating any local files—everything lives in your browser’s storage. If you do decide you’d like a copy on disk, you can download it any time. Or. as mentioned above, you can easily share it as a Gist.
 
 ## Features
 
