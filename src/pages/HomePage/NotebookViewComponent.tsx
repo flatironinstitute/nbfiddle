@@ -174,9 +174,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       (x) => new Set([...x].filter((a) => a !== activeCellId)),
                     );
                   }
-                  console.log(
-                    "------- oe1 ===========================================",
-                  );
                   onExecute({ advance: true });
                 } else if (event.ctrlKey || event.metaKey) {
                   if (
@@ -187,9 +184,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       (x) => new Set([...x].filter((a) => a !== activeCellId)),
                     );
                   }
-                  console.log(
-                    "------- oe2 ===========================================",
-                  );
                   onExecute({ advance: false });
                 }
               } else if (event.key === "ArrowUp") {
@@ -329,9 +323,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                                   new Set([...x].filter((a) => a !== cellId)),
                               );
                             }
-                            console.log(
-                              "------- oe3 ===========================================",
-                            );
                             onExecute({ advance: true });
                           }}
                           style={{

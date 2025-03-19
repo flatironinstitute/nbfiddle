@@ -176,7 +176,6 @@ export const useExecute = (
 ) => {
   return useCallback(
     async ({ advance }: { advance: boolean }) => {
-      console.log("---------------------------------------- EEEEE");
       if (currentCellExecution.executingCellId) {
         console.warn("Cell already executing");
         return;
@@ -204,7 +203,6 @@ export const useExecute = (
           newCodeCell.get("source"),
           sessionClient,
           (outputs) => {
-            console.log("---- outputs length:", outputs.size);
             const newCodeCell = codeCell.set("outputs", outputs);
             newNotebook = newNotebook.setIn(
               ["cellMap", activeCellId],

@@ -9,7 +9,6 @@ const executeCell = async (
   onOutputsUpdated: (outputs: List<ImmutableOutput>) => void,
   canceledRef: { current: boolean },
 ): Promise<List<ImmutableOutput>> => {
-  console.log("--- executeCell ---", { code });
   const outputs: ImmutableOutput[] = [];
   const removeOnOutputItemCallback = sessionClient.onOutputItem((item) => {
     if (item.type === "iopub") {
