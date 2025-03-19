@@ -26,7 +26,7 @@ import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOper
 import { ParsedUrlParams } from "../shared/util/indexedDb";
 import CloudSaveDialog from "./CloudSaveDialog";
 import DownloadOptionsDialog from "./DownloadOptionsDialog";
-import FileUploadDialog from "./FileUploadDialog";
+import FileImportDialog from "./FileImportDialog";
 import LocalSaveDialog from "./LocalSaveDialog";
 
 type ToolbarProps = {
@@ -212,6 +212,36 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title="Restart Kernel">
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setRestartDialogOpen(true)}
+                disabled={!jupyterServerIsAvailable}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Import Notebook">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <FileUploadIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Download Notebook">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => setDownloadOptionsDialogOpen(true)}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Save Locally">
             <IconButton
               size="small"
@@ -229,36 +259,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             >
               <CloudUploadIcon />
             </IconButton>
-          </Tooltip>
-          <Tooltip title="Download Options">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => setDownloadOptionsDialogOpen(true)}
-            >
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Upload Notebook">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => setUploadDialogOpen(true)}
-            >
-              <FileUploadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Restart Kernel">
-            <span>
-              <IconButton
-                size="small"
-                color="primary"
-                onClick={() => setRestartDialogOpen(true)}
-                disabled={!jupyterServerIsAvailable}
-              >
-                <RestartAltIcon />
-              </IconButton>
-            </span>
           </Tooltip>
         </Box>
       </MuiToolbar>
@@ -348,7 +348,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         onClose={() => setLocalSaveDialogOpen(false)}
       />
 
-      <FileUploadDialog
+      <FileImportDialog
         open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
         onFileSelected={async (file) => {

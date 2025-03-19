@@ -11,14 +11,14 @@ import {
 } from "@mui/material";
 import { FunctionComponent, useCallback, useState } from "react";
 
-type FileUploadDialogProps = {
+type FileImportDialogProps = {
   open: boolean;
   onClose: () => void;
   onFileSelected: (file: File) => void;
   onContentPasted: (content: string) => void;
 };
 
-const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
+const FileImportDialog: FunctionComponent<FileImportDialogProps> = ({
   open,
   onClose,
   onFileSelected,
@@ -58,7 +58,7 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Upload Notebook</DialogTitle>
+      <DialogTitle>Import Notebook</DialogTitle>
       <DialogContent>
         <Typography variant="subtitle1" gutterBottom>
           Option 1: Drag and drop or select a file
@@ -128,4 +128,4 @@ const FileUploadDialog: FunctionComponent<FileUploadDialogProps> = ({
   );
 };
 
-export default FileUploadDialog;
+export default FileImportDialog;
