@@ -7,8 +7,6 @@ interface MarkdownCellViewProps {
   width: number;
   cell: ImmutableMarkdownCell;
   onChange: (cell: ImmutableMarkdownCell) => void;
-  onShiftEnter: () => void;
-  onCtrlEnter: () => void;
   requiresFocus?: boolean;
   isEditing: boolean;
   onStartEditing: () => void;
@@ -18,20 +16,10 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
   width,
   cell,
   onChange,
-  onShiftEnter,
-  onCtrlEnter,
   requiresFocus,
   isEditing,
   onStartEditing,
 }) => {
-  const handleShiftEnter = () => {
-    onShiftEnter();
-  };
-
-  const handleCtrlEnter = () => {
-    onCtrlEnter();
-  };
-
   if (isEditing) {
     return (
       <div style={{ marginBottom: 16 }}>
@@ -39,8 +27,6 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
           width={width}
           cell={cell}
           onChange={onChange}
-          onShiftEnter={handleShiftEnter}
-          onCtrlEnter={handleCtrlEnter}
           requiresFocus={requiresFocus}
         />
       </div>

@@ -365,20 +365,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                           key={cellId}
                           width={notebookWidth - 120} // figure out a better way to do this
                           cell={cell}
-                          onShiftEnter={() => {
-                            setMarkdownCellIdsBeingEdited(
-                              (x) =>
-                                new Set([...x].filter((a) => a !== cellId)),
-                            );
-                            onExecute({ advance: true });
-                          }}
-                          onCtrlEnter={() => {
-                            setMarkdownCellIdsBeingEdited(
-                              (x) =>
-                                new Set([...x].filter((a) => a !== cellId)),
-                            );
-                            onExecute({ advance: false });
-                          }}
                           onChange={(newCell: ImmutableMarkdownCell) => {
                             const newNotebook = notebook.setIn(
                               ["cellMap", cellId],

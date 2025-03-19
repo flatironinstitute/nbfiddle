@@ -73,7 +73,6 @@ const StoredNotebooksView: React.FC<StoredNotebooksViewProps> = ({
   };
 
   const handleOpen = (key: string) => {
-    const searchParams = new URLSearchParams();
     if (key.startsWith("local:")) {
       navigate(`?localname=${key.substring("local:".length)}`);
     } else if (key.startsWith("github:")) {
