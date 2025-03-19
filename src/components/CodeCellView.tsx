@@ -116,47 +116,58 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                 );
               } else if ("text/html" in output.data) {
                 const html = output.data["text/html"] as string;
-                // Wrap HTML content with base styles and create a sandboxed iframe
-                // Doing this without an iframe doesn't work if the html contains scripts to be executed (e.g., Altair)
-                const wrappedHtml = `
-                  <!DOCTYPE html>
-                  <html>
-                    <head>
-                      <style>
-                        body {
-                          margin: 0;
-                          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                          line-height: 1.5;
-                        }
-                        /* Add other default styles as needed */
-                      </style>
-                    </head>
-                    <body>${html}</body>
-                  </html>
-                `;
-                return (
-                  <div key={index} style={{ width: "100%" }}>
-                    <iframe
-                      srcDoc={wrappedHtml}
-                      style={{
-                        width: "100%",
-                        border: "none",
-                        overflow: "hidden",
-                      }}
-                      onLoad={(e) => {
-                        // Adjust iframe height to match content
-                        const iframe = e.target as HTMLIFrameElement;
-                        const height =
-                          iframe.contentWindow?.document.documentElement
-                            .scrollHeight;
-                        if (height) {
-                          iframe.style.height = `${height}px`;
-                        }
-                      }}
-                      sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
+                // if the html is just an iframe itself, then we don't need to wrap it in another iframe
+                if (html.startsWith("<iframe")) {
+                  return (
+                    <div
+                      key={index}
+                      style={{ width: "100%", overflowX: "auto" }}
+                      dangerouslySetInnerHTML={{ __html: html }}
                     />
-                  </div>
-                );
+                  );
+                } else {
+                  // Wrap HTML content with base styles and create a sandboxed iframe
+                  // Doing this without an iframe doesn't work if the html contains scripts to be executed (e.g., Altair)
+                  const wrappedHtml = `
+                    <!DOCTYPE html>
+                    <html>
+                      <head>
+                        <style>
+                          body {
+                            margin: 0;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                            line-height: 1.5;
+                          }
+                          /* Add other default styles as needed */
+                        </style>
+                      </head>
+                      <body>${html}</body>
+                    </html>
+                  `;
+                  return (
+                    <div key={index} style={{ width: "100%" }}>
+                      <iframe
+                        srcDoc={wrappedHtml}
+                        style={{
+                          width: "100%",
+                          border: "none",
+                          overflow: "hidden",
+                        }}
+                        onLoad={(e) => {
+                          // Adjust iframe height to match content
+                          const iframe = e.target as HTMLIFrameElement;
+                          const height =
+                            iframe.contentWindow?.document.documentElement
+                              .scrollHeight;
+                          if (height) {
+                            iframe.style.height = `${height}px`;
+                          }
+                        }}
+                        sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
+                      />
+                    </div>
+                  );
+                }
               } else {
                 // console.log("Using plain text output", output);
                 return <div key={index}>{plainText}</div>;

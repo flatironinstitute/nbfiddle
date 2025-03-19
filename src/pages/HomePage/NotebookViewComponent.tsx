@@ -1,4 +1,5 @@
 import CodeCellView from "@components/CodeCellView";
+import getGlobalEnterPressManager from "@components/globalEnterPressManager";
 import MarkdownCellView from "@components/MarkdownCellView";
 import ScrollY from "@components/ScrollY";
 import Toolbar from "@components/Toolbar";
@@ -15,13 +16,11 @@ import {
   ImmutableCodeCell,
   ImmutableMarkdownCell,
   ImmutableNotebook,
-  toJS,
 } from "@nteract/commutable";
 import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import PythonSessionClient from "../../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../../shared/util/indexedDb";
 import { ExecutionState } from "./notebook/notebook-execution";
-import getGlobalEnterPressManager from "@components/globalEnterPressManager";
 
 type NotebookViewComponentProps = {
   width: number;
@@ -121,14 +120,14 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   }, [onShiftEnter, onCtrlEnter]);
 
   const handleLogCell = (cellId: string) => {
-    const nb = toJS(notebook);
-    const cell = nb.cells.find((c) => c.id === cellId);
-    if (cell) {
-      console.info("Active cell:");
-      console.info(JSON.parse(JSON.stringify(cell)));
-    } else {
-      console.info("Cell not found");
+    const c = notebook.cellMap.get(cellId);
+    if (!c) {
+      console.info(`Cell not found: ${cellId}`);
+      return;
     }
+    const a = c.asMutable().toJS();
+    console.info("Cell:");
+    console.info(a);
   };
 
   const horizontalMargin = 10;
