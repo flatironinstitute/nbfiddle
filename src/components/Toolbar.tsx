@@ -98,16 +98,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     };
   };
 
-  const a = parsedUrlParams
-    ? parsedUrlParams.type === "github"
-      ? `${parsedUrlParams.owner}/${parsedUrlParams.repo}/${parsedUrlParams.path}`
-      : parsedUrlParams.type === "gist"
-        ? `${parsedUrlParams.owner}/${parsedUrlParams.gistId}/${parsedUrlParams.gistFileMorphed}`
-        : "Invalid parsedUrlParams"
-    : null;
-
-  console.log("------------", parsedUrlParams, a);
-
   const status = getConnectionStatus();
   return (
     <AppBar

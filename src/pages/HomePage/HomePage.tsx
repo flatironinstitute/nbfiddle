@@ -131,6 +131,9 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
           <Tabs
             value={selectedTab}
             onChange={(_, newValue) => setSelectedTab(newValue)}
+            variant="scrollable"
+            scrollButtons={true}
+            allowScrollButtonsMobile={true}
             sx={{
               minHeight: 36,
               "& .MuiTab-root": {

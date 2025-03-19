@@ -1,21 +1,42 @@
 # nbfiddle
 
-[nbfiddle.org](https://nbfiddle.org) - A streamlined way to work with Python notebooks
+[nbfiddle.org](https://nbfiddle.org) – A streamlined approach to Python Jupyter notebooks
 
-## What is nbfiddle?
+## Overview
 
-nbfiddle is a web-based notebook interface that stores everything in your browser. It's designed for working with self-contained notebooks that focus on data analysis, particularly when streaming data from remote repositories like DANDI archive.
+nbfiddle is a web-based Jupyter notebook interface that leverages your browser’s storage for saving and managing notebooks. It is designed for self-contained Python notebooks that focus on data analysis, particularly when working with remote data sources such as the DANDI archive.
 
-## How it Works
+## Use Cases
 
-nbfiddle simplifies working with Python notebooks by removing file management overhead. Your changes are saved directly in your browser - no need to manage .ipynb files on your system. To use a notebook, simply point nbfiddle to its GitHub URL:
+1. **Viewing a Notebook on GitHub**
+   Typically, to interact with a notebook on GitHub, you need to clone the repository or download the notebook, then open it in JupyterLab or VS Code. With nbfiddle, you simply use the notebook’s GitHub URL as a query parameter to launch an interactive version immediately. If you want to run the code, you can connect to a local JupyterLab server or use a publicly hosted server. Your edits are stored in your browser, but the link to the original GitHub version remains, so you can revert at any time. This approach removes the need to manage local files and lets you share an interactive notebook URL with colleagues—no downloads required.
 
-```
-https://nbfiddle.org?url=https://github.com/owner/repo/blob/branch/path/notebook.ipynb
-```
+2. **Publishing and Sharing Your Notebook**
+   If you want to share a notebook, you might normally push it to a Git repository. With nbfiddle, you can publish your notebook directly to a GitHub Gist and instantly share the link. As you continue refining the notebook, it’s easy to push updates back to that same Gist.
 
-You can immediately start editing the notebook, and all changes are automatically saved in your browser. If you want to go back to the original version from GitHub, you can do so with a single click.
+3. **Quick Local Experiments**
+   For quick experimentation, it’s common to end up with many local files named `Untitled (x).ipynb`. With nbfiddle, you can start a new notebook without creating any local files—everything lives in your browser’s storage. If you do decide you’d like a copy on disk, you can download it any time.
 
-To run cells, connect nbfiddle to a Jupyter server - either running locally or using one of the cloud options (which require a secret token). Even without a Jupyter connection, you can still explore and edit notebooks.
+## Features
 
-This approach is ideal for notebooks that work with remote data sources, as there's no need to manage local data files. You can quickly test and modify notebooks without having to download or manage files on your system.
+- Edit a notebook with changes saved directly to your browser’s storage
+- Download the notebook as `.ipynb`
+- Download the notebook as a Jupytext `.py` file
+- Publish a notebook as a new GitHub Gist
+- Update an existing GitHub Gist with changes
+- Open an interactive notebook view from a GitHub repo or Gist
+- Keep local browser copies of remote notebooks
+- Revert local changes to the remote version
+- Browse and manage your browser-stored notebooks
+- Import `.ipynb` or Jupytext `.py` files from your local machine
+- Connect to a local or public JupyterLab server for code execution
+- Host your own remote JupyterLab server
+- Use experimental AI code completion (requires an OpenRouter key)
+
+## Notes
+
+- Because nbfiddle does not include the text/html representation of Plotly figures, notebooks containing Plotly charts are typically much smaller in disk size.
+- While GitHub's native notebook rendering can be useful, advanced features like interactive Plotly charts are not supported there.
+- nbfiddle focuses on editing single self-contained notebooks and does not support importing additional Python files.
+- It is not intended to replace JupyterLab; instead, it provides a lightweight, browser-based environment for single-file editing and sharing.
+- To use nbfiddle with a JupyterLab server, that server must be started with the required flags and options for external connections. Currently, connections to JupyterHub are not supported.
