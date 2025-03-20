@@ -215,12 +215,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                         : "Invalid parsedUrlParams"
                   }
                 >
-                  <IconButton
+                  <Button
                     size="small"
+                    variant="outlined"
                     onClick={() => setResetDialogOpen(true)}
                   >
-                    <RestartAltIcon fontSize="small" />
-                  </IconButton>
+                    Revert
+                  </Button>
                 </Tooltip>
               )}
             </>
@@ -329,7 +330,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <RestartAltIcon fontSize="small" />
                 <Typography>Open default notebook</Typography>
               </Box>
             </MenuItem>
