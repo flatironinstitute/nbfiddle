@@ -217,7 +217,11 @@ export const useExecute = (
           newCodeCell.get("source"),
           sessionClient,
           (outputs) => {
-            const newCodeCell = codeCell.set("outputs", outputs);
+            let newCodeCell = codeCell.set("outputs", outputs);
+            newCodeCell = newCodeCell.set(
+              "metadata",
+              newCodeCell.metadata.set("collapsed", false),
+            );
             newNotebook = newNotebook.setIn(
               ["cellMap", activeCellId],
               newCodeCell,

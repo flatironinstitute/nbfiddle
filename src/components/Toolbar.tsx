@@ -94,7 +94,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     onResetToRemote?.();
   };
 
-  const { jupyterServerIsAvailable, jupyterServerUrl } = useJupyterConnectivity();
+  const { jupyterServerIsAvailable, jupyterServerUrl } =
+    useJupyterConnectivity();
 
   const getConnectionStatus = () => {
     if (sessionClient) {
@@ -139,32 +140,34 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             userSelect: "none",
           }}
         >
-            <Tooltip title={sessionClient ? `Connected to ${jupyterServerUrl}` : ""}>
+          <Tooltip
+            title={sessionClient ? `Connected to ${jupyterServerUrl}` : ""}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                cursor: "pointer",
+                "&:hover": {
+                  opacity: 0.8,
+                },
+              }}
+              onClick={() => onJupyterConfigClick?.()}
+            >
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  cursor: "pointer",
-                  "&:hover": {
-                    opacity: 0.8,
-                  },
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  backgroundColor: status.color,
                 }}
-                onClick={() => onJupyterConfigClick?.()}
-              >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    backgroundColor: status.color,
-                  }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {status.text}
-                </Typography>
-              </Box>
-            </Tooltip>
+              />
+              <Typography variant="body2" color="text.secondary">
+                {status.text}
+              </Typography>
+            </Box>
+          </Tooltip>
           {executingCellId ? (
             <Tooltip title={`Executing cell`}>
               <CircularProgress size={20} color="primary" />

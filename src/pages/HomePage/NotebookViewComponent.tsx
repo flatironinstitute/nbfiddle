@@ -225,6 +225,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 handleLogCell(activeCellId);
               } else if (event.key === "Escape") {
                 paperRef.current?.focus();
+              } else if (event.key === "Home") {
+                setActiveCellId(notebook.cellOrder.first());
+              } else if (event.key === "End") {
+                setActiveCellId(notebook.cellOrder.last());
               }
             }}
           >
