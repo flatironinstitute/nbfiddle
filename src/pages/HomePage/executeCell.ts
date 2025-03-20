@@ -38,7 +38,7 @@ const executeCell = async (
         outputs.push(
           createImmutableOutput({
             output_type: "display_data",
-            ...iopub.content,
+            ...stripPlotlyHtml(iopub.content),
           } as any),
         );
         onOutputsUpdated(List(outputs));
@@ -46,7 +46,7 @@ const executeCell = async (
         outputs.push(
           createImmutableOutput({
             output_type: "execute_result",
-            ...iopub.content,
+            ...stripPlotlyHtml(iopub.content),
           } as any),
         );
         onOutputsUpdated(List(outputs));
@@ -88,6 +88,22 @@ const executeCell = async (
   } finally {
     removeOnOutputItemCallback();
   }
+};
+
+const stripPlotlyHtml = (content: any) => {
+  // plotly adds extra html to the output, which we don't want to display or include in the notebook
+  // instead we look for application/vnd.plotly.v1+json and remove the text/html
+  // (note this is also done in the serializeNotebook, and it's needed there as well)
+  if (typeof content !== "object") return content;
+  if (content.data && content.data["text/html"]) {
+    const x = content.data["text/html"];
+    if (x.includes("window.PlotlyConfig")) {
+      const newData = { ...content.data };
+      delete newData["text/html"];
+      return { ...content, data: newData };
+    }
+  }
+  return content;
 };
 
 export default executeCell;

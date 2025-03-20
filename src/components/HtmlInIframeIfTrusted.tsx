@@ -1,5 +1,6 @@
 import DOMPurify from "dompurify";
 import { FunctionComponent, useMemo } from "react";
+import "./html-content-in-cell-output.css";
 
 const HtmlInIframeIfTrusted: FunctionComponent<{
   htmlUnsafeUnlessInsideATrustedIframe: string;
@@ -14,56 +15,71 @@ const HtmlInIframeIfTrusted: FunctionComponent<{
   // by the correct iframe when multiple instances exist on the page
   const iframeId = useMemo(() => crypto.randomUUID(), []);
 
-  let safeOrTrustedHtml: string;
   if (
     !htmlUnsafeUnlessInsideATrustedIframe.includes("<script") &&
     !htmlUnsafeUnlessInsideATrustedIframe.includes("<iframe")
   ) {
     // If it doesn't contain any <script> tags (e.g., pandas), then we're going to just sanitize it
-    safeOrTrustedHtml = DOMPurify.sanitize(
-      htmlUnsafeUnlessInsideATrustedIframe,
-    );
-  } else {
-    // Otherwise, we'll only display it if the notebook is trusted
-    if (notebookIsTrusted) {
-      if (htmlUnsafeUnlessInsideATrustedIframe.trim().startsWith("<iframe")) {
-        const htmlSafe = DOMPurify.sanitize(
-          htmlUnsafeUnlessInsideATrustedIframe,
-          { ADD_TAGS: ["iframe"] },
-        );
-        return <div dangerouslySetInnerHTML={{ __html: htmlSafe }} />;
+
+    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+      if (node.tagName === "A" && node.getAttribute("target") === "_blank") {
+        node.setAttribute("rel", "noopener noreferrer"); // when using target="_blank", always add rel="noopener noreferrer" to prevent tabnabbing
       }
-      safeOrTrustedHtml = htmlUnsafeUnlessInsideATrustedIframe;
-    } else {
-      return (
-        <div
+    });
+    const sanitizedHtml = DOMPurify.sanitize(
+      htmlUnsafeUnlessInsideATrustedIframe,
+      {
+        ADD_ATTR: ["target"], // allow target="_blank" links
+      },
+    );
+    return (
+      <div
+        className="html-content-in-cell-output"
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+      />
+    );
+  }
+
+  // Otherwise, we'll only display it if the notebook is trusted
+  let trustedHtml: string;
+  if (notebookIsTrusted) {
+    if (htmlUnsafeUnlessInsideATrustedIframe.trim().startsWith("<iframe")) {
+      const htmlSafe = DOMPurify.sanitize(
+        htmlUnsafeUnlessInsideATrustedIframe,
+        { ADD_TAGS: ["iframe"] },
+      );
+      return <div dangerouslySetInnerHTML={{ __html: htmlSafe }} />;
+    }
+    trustedHtml = htmlUnsafeUnlessInsideATrustedIframe;
+  } else {
+    return (
+      <div
+        style={{
+          padding: "15px",
+          border: "1px solid #ddd",
+          borderRadius: "5px",
+          margin: "10px 0",
+        }}
+      >
+        <p style={{ margin: "0 0 10px 0" }}>
+          This notebook contains HTML content that will only be displayed if you
+          trust the notebook.
+        </p>
+        <button
+          onClick={() => setNotebookIsTrusted(true)}
           style={{
-            padding: "15px",
-            border: "1px solid #ddd",
-            borderRadius: "5px",
-            margin: "10px 0",
+            padding: "8px 16px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
           }}
         >
-          <p style={{ margin: "0 0 10px 0" }}>
-            This notebook contains HTML content that will only be displayed if
-            you trust the notebook.
-          </p>
-          <button
-            onClick={() => setNotebookIsTrusted(true)}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            Click to trust notebook
-          </button>
-        </div>
-      );
-    }
+          Click to trust notebook
+        </button>
+      </div>
+    );
   }
 
   // Wrap HTML content with base styles and create a sandboxed iframe
@@ -71,52 +87,7 @@ const HtmlInIframeIfTrusted: FunctionComponent<{
   const wrappedHtml = `
   <!DOCTYPE html>
   <html>
-    <head>
-      <style>
-        body {
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          line-height: 1.5;
-        }
-        table {
-          border-collapse: collapse;
-          border-spacing: 0;
-          margin: 1em 0;
-          font-size: 13px;
-        }
-        thead {
-          border-bottom: 2px solid #ddd;
-          background-color: #f9f9f9;
-          text-align: right;
-        }
-        tbody tr:nth-child(even) {
-          background-color: #f5f5f5;
-        }
-        tbody tr:hover {
-          background-color: rgba(66, 165, 245, 0.1);
-        }
-        th, td {
-          padding: 0.5em 1em;
-          text-align: right;
-          border: 1px solid #ddd;
-          max-width: 400px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        th:first-child, td:first-child {
-          text-align: left;
-        }
-        th {
-          font-weight: bold;
-          vertical-align: bottom;
-        }
-        tr:last-child td {
-          border-bottom: 1px solid #ddd;
-        }
-      </style>
-    </head>
-    <body>${safeOrTrustedHtml}</body>
+    <body>${trustedHtml}</body>
   </html>`;
   // Security Note: We want to resize the iframe to fit its content, but we can't use
   // contentWindow.document directly without 'allow-same-origin' in sandbox.
@@ -176,6 +147,7 @@ const HtmlInIframeIfTrusted: FunctionComponent<{
       // Security: We only allow scripts (for resize observer) and downloads
       // We intentionally exclude 'allow-same-origin' to prevent direct DOM access
       // from iframe content to parent window
+      // allow opening new tabs with target="_blank" links
       sandbox="allow-scripts allow-downloads"
     />
   );

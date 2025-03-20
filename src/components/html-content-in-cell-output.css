@@ -1,0 +1,176 @@
+.html-content-in-cell-output {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* Headings */
+.html-content-in-cell-output h1,
+.html-content-in-cell-output h2,
+.html-content-in-cell-output h3,
+.html-content-in-cell-output h4,
+.html-content-in-cell-output h5,
+.html-content-in-cell-output h6 {
+  margin: 1em 0 0.5em;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #222;
+}
+
+.html-content-in-cell-output h1 { font-size: 2em; }
+.html-content-in-cell-output h2 { font-size: 1.5em; }
+.html-content-in-cell-output h3 { font-size: 1.3em; }
+.html-content-in-cell-output h4 { font-size: 1.2em; }
+.html-content-in-cell-output h5 { font-size: 1.1em; }
+.html-content-in-cell-output h6 { font-size: 1em; }
+
+/* Links */
+.html-content-in-cell-output a {
+  color: #2196F3;
+  text-decoration: none;
+}
+
+.html-content-in-cell-output a:hover {
+  text-decoration: underline;
+}
+
+/* Paragraphs and spacing */
+.html-content-in-cell-output p {
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.html-content-in-cell-output ul,
+.html-content-in-cell-output ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.html-content-in-cell-output li {
+  margin: 0.25em 0;
+}
+
+/* Code blocks and inline code */
+.html-content-in-cell-output pre {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 0.5em;
+  margin: 0.5em 0;
+  overflow-x: auto;
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+.html-content-in-cell-output code {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+/* Images */
+.html-content-in-cell-output img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+}
+
+/* Blockquotes */
+.html-content-in-cell-output blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 4px solid #ddd;
+  color: #666;
+}
+
+/* Tables */
+.html-content-in-cell-output table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 1em 0;
+  font-size: 13px;
+  width: 100%;
+}
+
+.html-content-in-cell-output thead {
+  border-bottom: 2px solid #ddd;
+  background-color: #f9f9f9;
+  text-align: right;
+}
+
+.html-content-in-cell-output tbody tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+
+.html-content-in-cell-output tbody tr:hover {
+  background-color: rgba(66, 165, 245, 0.1);
+}
+
+.html-content-in-cell-output th,
+.html-content-in-cell-output td {
+  padding: 0.5em 1em;
+  text-align: right;
+  border: 1px solid #ddd;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.html-content-in-cell-output th:first-child,
+.html-content-in-cell-output td:first-child {
+  text-align: left;
+}
+
+.html-content-in-cell-output th {
+  font-weight: bold;
+  vertical-align: bottom;
+}
+
+.html-content-in-cell-output tr:last-child td {
+  border-bottom: 1px solid #ddd;
+}
+
+/* Horizontal rule */
+.html-content-in-cell-output hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 1em 0;
+}
+
+/* Description lists */
+.html-content-in-cell-output dt {
+  font-weight: bold;
+  margin-top: 0.5em;
+}
+
+.html-content-in-cell-output dd {
+  margin-left: 2em;
+  margin-bottom: 0.5em;
+}
+
+/* Mark/highlight text */
+.html-content-in-cell-output mark {
+  background-color: #fff176;
+  padding: 0.2em;
+}
+
+/* Subscript and superscript */
+.html-content-in-cell-output sub,
+.html-content-in-cell-output sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.html-content-in-cell-output sup {
+  top: -0.5em;
+}
+
+.html-content-in-cell-output sub {
+  bottom: -0.25em;
+}
