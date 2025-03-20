@@ -94,7 +94,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
     onResetToRemote?.();
   };
 
-  const { jupyterServerIsAvailable } = useJupyterConnectivity();
+  const { jupyterServerIsAvailable, jupyterServerUrl } = useJupyterConnectivity();
 
   const getConnectionStatus = () => {
     if (sessionClient) {
@@ -139,43 +139,47 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             userSelect: "none",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              cursor: "pointer",
-              "&:hover": {
-                opacity: 0.8,
-              },
-            }}
-            onClick={() => onJupyterConfigClick?.()}
-          >
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                backgroundColor: status.color,
-              }}
-            />
-            <Typography variant="body2" color="text.secondary">
-              {status.text}
-            </Typography>
-          </Box>
+            <Tooltip title={sessionClient ? `Connected to ${jupyterServerUrl}` : ""}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  "&:hover": {
+                    opacity: 0.8,
+                  },
+                }}
+                onClick={() => onJupyterConfigClick?.()}
+              >
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    backgroundColor: status.color,
+                  }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {status.text}
+                </Typography>
+              </Box>
+            </Tooltip>
           {executingCellId ? (
             <Tooltip title={`Executing cell`}>
               <CircularProgress size={20} color="primary" />
             </Tooltip>
           ) : sessionClient ? (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ fontFamily: "monospace", cursor: "pointer" }}
-              onClick={() => onJupyterConfigClick?.()}
-            >
-              Ready
-            </Typography>
+            <Tooltip title={`Connected to ${jupyterServerUrl}`}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontFamily: "monospace", cursor: "pointer" }}
+                onClick={() => onJupyterConfigClick?.()}
+              >
+                Ready
+              </Typography>
+            </Tooltip>
           ) : (
             <Typography
               variant="body2"
@@ -206,23 +210,36 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                 </Typography>
               )}
               {hasLocalChanges && onResetToRemote && (
-                <Tooltip
-                  title={
-                    parsedUrlParams.type === "github"
-                      ? "Reset to GitHub version"
-                      : parsedUrlParams.type === "gist"
-                        ? "Reset to Gist version"
-                        : "Invalid parsedUrlParams"
-                  }
-                >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => setResetDialogOpen(true)}
+                <>
+                  <Tooltip
+                    title={
+                      parsedUrlParams.type === "github"
+                        ? "Reset to GitHub version"
+                        : parsedUrlParams.type === "gist"
+                          ? "Reset to Gist version"
+                          : "Invalid parsedUrlParams"
+                    }
                   >
-                    Revert
-                  </Button>
-                </Tooltip>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setResetDialogOpen(true)}
+                    >
+                      Revert
+                    </Button>
+                  </Tooltip>
+                  {parsedUrlParams.type === "gist" && (
+                    <Tooltip title="Update the gist with local changes">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setCloudSaveDialogOpen(true)}
+                      >
+                        Update Gist
+                      </Button>
+                    </Tooltip>
+                  )}
+                </>
               )}
             </>
           )}
