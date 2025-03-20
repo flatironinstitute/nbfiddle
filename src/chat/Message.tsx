@@ -2,10 +2,7 @@
 import { Box, Paper, Typography, IconButton, Button } from "@mui/material";
 import UndoIcon from "@mui/icons-material/Undo";
 import { FunctionComponent, PropsWithChildren, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import remarkGfm from "remark-gfm";
-import { vs as highlightStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
+import MarkdownContent from "../components/MarkdownContent";
 import { ORMessage } from "../pages/HomePage/openRouterTypes";
 
 type MessageContainerProps = {
@@ -141,23 +138,9 @@ const Message: FunctionComponent<MessageProps> = ({
             message.tool_calls.map((toolCall) => (
               <Box key={toolCall.id} sx={{ mb: 1 }}>
                 {toolCall.function.name === "execute_python_code" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code({ children }) {
-                        return (
-                          <SyntaxHighlighter
-                            PreTag="div"
-                            children={String(children).replace(/\n$/, "")}
-                            language="python"
-                            style={highlightStyle}
-                          />
-                        );
-                      },
-                    }}
-                  >
-                    {`\`\`\`python\n${JSON.parse(toolCall.function.arguments).code}\n\`\`\``}
-                  </ReactMarkdown>
+                  <MarkdownContent
+                    content={`\`\`\`python\n${JSON.parse(toolCall.function.arguments).code}\n\`\`\``}
+                  />
                 ) : (
                   <Typography
                     variant="body2"
@@ -200,45 +183,9 @@ const Message: FunctionComponent<MessageProps> = ({
           </Box>
           {toolResultExpanded && (
             <Box>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a({ children, ...props }) {
-                    return (
-                      <a
-                        href={props.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        {...props}
-                      >
-                        {children}
-                      </a>
-                    );
-                  },
-                  code(props) {
-                    const { children, className, ...rest } = props;
-                    const match = /language-(\w+)/.exec(className || "");
-                    return match ? (
-                      <SyntaxHighlighter
-                        PreTag="div"
-                        children={String(children).replace(/\n$/, "")}
-                        language={match[1]}
-                        style={highlightStyle}
-                      />
-                    ) : (
-                      <code
-                        {...rest}
-                        className={className}
-                        style={{ background: "#eee" }}
-                      >
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
-              >
-                {formatMessageContent(message.content)}
-              </ReactMarkdown>
+              <MarkdownContent
+                content={formatMessageContent(message.content)}
+              />
             </Box>
           )}
         </Box>
@@ -247,95 +194,14 @@ const Message: FunctionComponent<MessageProps> = ({
 
     // Handle regular text content
     if (typeof message.content === "string") {
-      return (
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            a({ children, ...props }) {
-              return (
-                <a
-                  href={props.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  {...props}
-                >
-                  {children}
-                </a>
-              );
-            },
-            code(props) {
-              const { children, className, ...rest } = props;
-              const match = /language-(\w+)/.exec(className || "");
-              return match ? (
-                <SyntaxHighlighter
-                  PreTag="div"
-                  children={String(children).replace(/\n$/, "")}
-                  language={match[1]}
-                  style={highlightStyle}
-                />
-              ) : (
-                <code
-                  {...rest}
-                  className={className}
-                  style={{ background: "#eee" }}
-                >
-                  {children}
-                </code>
-              );
-            },
-          }}
-        >
-          {message.content}
-        </ReactMarkdown>
-      );
+      return <MarkdownContent content={message.content} />;
     }
 
     // Handle array of content parts (e.g. text + images)
     if (Array.isArray(message.content)) {
       return message.content.map((part, index) => {
         if (part.type === "text") {
-          return (
-            <ReactMarkdown
-              key={index}
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a({ children, ...props }) {
-                  return (
-                    <a
-                      href={props.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      {...props}
-                    >
-                      {children}
-                    </a>
-                  );
-                },
-                code(props) {
-                  const { children, className, ...rest } = props;
-                  const match = /language-(\w+)/.exec(className || "");
-                  return match ? (
-                    <SyntaxHighlighter
-                      PreTag="div"
-                      children={String(children).replace(/\n$/, "")}
-                      language={match[1]}
-                      style={highlightStyle}
-                    />
-                  ) : (
-                    <code
-                      {...rest}
-                      className={className}
-                      style={{ background: "#eee" }}
-                    >
-                      {children}
-                    </code>
-                  );
-                },
-              }}
-            >
-              {part.text}
-            </ReactMarkdown>
-          );
+          return <MarkdownContent key={index} content={part.text} />;
         }
         if (part.type === "image_url") {
           return (

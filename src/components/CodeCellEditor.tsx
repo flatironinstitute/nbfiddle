@@ -65,6 +65,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
       editor.onKeyDown((event) => {
         // do not propagate special key events such as "a" and "b"
         if (
+          !event.ctrlKey &&
           [
             monaco.KeyCode.KeyA,
             monaco.KeyCode.KeyB,
