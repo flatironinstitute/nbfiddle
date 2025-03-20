@@ -178,7 +178,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
             elevation={1}
             sx={{
               width: notebookWidth, // figure out a better way to do this
-              minHeight: 200,
+              minHeight: 100,
               backgroundColor: "background.paper",
               padding: 0,
               borderRadius: 1,
