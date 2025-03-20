@@ -71,7 +71,17 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
-  const [notebook, setNotebook] = useState<ImmutableNotebook>(emptyNotebook);
+  const [notebook, setNotebook0] = useState<ImmutableNotebook>(emptyNotebook);
+  const [notebookIsTrusted, setNotebookIsTrusted] = useState(true); // start trusting the empty notebook, but if we import or load from remote, then this will be set to false
+  const setNotebook = useCallback(
+    (notebook: ImmutableNotebook, o: { isTrusted?: boolean }) => {
+      setNotebook0(notebook);
+      if (o.isTrusted !== undefined) {
+        setNotebookIsTrusted(o.isTrusted);
+      }
+    },
+    [],
+  );
   const [remoteNotebookFilePath, setRemoteNotebookFilePath] = useState<
     string | null
   >(null);
@@ -106,12 +116,12 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   const resetToRemoteVersion = useCallback(() => {
     if (remoteNotebook) {
-      setNotebook(remoteNotebook);
+      setNotebook(remoteNotebook, { isTrusted: false });
       if (remoteNotebook.cellOrder.size > 0) {
         setActiveCellId(remoteNotebook.cellOrder.first());
       }
     }
-  }, [remoteNotebook]);
+  }, [remoteNotebook, setNotebook]);
 
   // Load saved notebook on mount or when parsedUrlParams or localname changes
   useLoadSavedNotebook(
@@ -129,8 +139,9 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       serializeNotebook(notebook),
       parsedUrlParams,
       localname,
+      notebookIsTrusted,
     );
-  }, [notebook, parsedUrlParams, localname]);
+  }, [notebook, parsedUrlParams, localname, notebookIsTrusted]);
 
   // set the AI context
   useEffect(() => {
@@ -229,14 +240,14 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         cell.outputs = [];
       }
     }
-    setNotebook(fromJS(newNotebook));
-  }, [notebook]);
+    setNotebook(fromJS(newNotebook), { isTrusted: undefined }); // don't change the trusted status
+  }, [notebook, setNotebook]);
 
   // TODO: Implement clearing entire notebook
   const handleClearNotebook = useCallback(() => {
-    setNotebook(emptyNotebook);
+    setNotebook(emptyNotebook, { isTrusted: true }); // clear the notebook and trust it
     setActiveCellId(undefined);
-  }, []);
+  }, [setNotebook, setActiveCellId]);
 
   return (
     <NotebookViewComponent
@@ -273,6 +284,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       onJupyterConfigClick={onJupyterConfigClick}
       onClearOutputs={handleClearOutputs}
       onClearNotebook={handleClearNotebook}
+      notebookIsTrusted={notebookIsTrusted}
     />
   );
 };

@@ -51,9 +51,10 @@ type NotebookViewComponentProps = {
   onDeleteCell: (cellId: string) => void;
   activeCellId: string | undefined;
   setActiveCellId: (id: string | undefined) => void;
-  setNotebook: (n: ImmutableNotebook) => void;
+  setNotebook: (n: ImmutableNotebook, o: { isTrusted?: boolean }) => void;
   cellIdRequiringFocus: string | null;
   setCellIdRequiringFocus: (id: string | null) => void;
+  notebookIsTrusted: boolean;
 };
 
 const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
@@ -87,6 +88,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   setNotebook,
   cellIdRequiringFocus,
   setCellIdRequiringFocus,
+  notebookIsTrusted,
 }) => {
   const isMobile = width <= 800;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
@@ -398,13 +400,17 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                               ["cellMap", cellId],
                               newCell,
                             );
-                            setNotebook(newNotebook);
+                            setNotebook(newNotebook, { isTrusted: undefined });
                           }}
                           requiresFocus={
                             cellId === activeCellId &&
                             cellIdRequiringFocus === cellId
                           }
                           onFocus={() => setActiveCellId(cellId)}
+                          notebookIsTrusted={notebookIsTrusted}
+                          setNotebookIsTrusted={() => {
+                            setNotebook(notebook, { isTrusted: true });
+                          }}
                         />
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
@@ -416,7 +422,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                               ["cellMap", cellId],
                               newCell,
                             );
-                            setNotebook(newNotebook);
+                            setNotebook(newNotebook, { isTrusted: undefined });
                           }}
                           isEditing={markdownCellIdsBeingEdited.has(cellId)}
                           onStartEditing={() => {
@@ -449,7 +455,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                     newCodeCell,
                   );
                   const newCellId = newNotebook.cellOrder.last() ?? null;
-                  setNotebook(newNotebook);
+                  setNotebook(newNotebook, { isTrusted: undefined });
                   if (newCellId) {
                     setActiveCellId(newCellId);
                     setCellIdRequiringFocus(newCellId);
@@ -474,7 +480,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                     newMarkdownCell,
                   );
                   const newCellId = newNotebook.cellOrder.last() ?? null;
-                  setNotebook(newNotebook);
+                  setNotebook(newNotebook, { isTrusted: undefined });
                   if (newCellId) {
                     setActiveCellId(newCellId);
                     setCellIdRequiringFocus(newCellId);

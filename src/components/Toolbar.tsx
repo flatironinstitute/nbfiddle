@@ -36,7 +36,10 @@ import FileImportDialog from "./FileImportDialog";
 import LocalSaveDialog from "./LocalSaveDialog";
 
 type ToolbarProps = {
-  onSetNotebook: (notebook: ImmutableNotebook) => void;
+  onSetNotebook: (
+    notebook: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void;
   onClearUrlParams: () => void;
   onJupyterConfigClick?: () => void;
   onClearOutputs?: () => void;
@@ -428,13 +431,13 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             // Convert from jupytext
             const notebook = convertFromJupytext(content);
             onClearUrlParams();
-            onSetNotebook(notebook);
+            onSetNotebook(notebook, { isTrusted: false });
           } else if (file.name.endsWith(".ipynb")) {
             // Parse as ipynb
             const notebookData = JSON.parse(content);
             const notebook = fromJS(notebookData);
             onClearUrlParams();
-            onSetNotebook(notebook);
+            onSetNotebook(notebook, { isTrusted: false });
           }
           // Clear URL params without reloading
           onClearUrlParams();
@@ -452,7 +455,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
           }
           // Clear URL params first
           onClearUrlParams();
-          onSetNotebook(notebook);
+          onSetNotebook(notebook, { isTrusted: false });
         }}
       />
     </AppBar>

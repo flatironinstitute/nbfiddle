@@ -4,6 +4,8 @@ import AnsiToHtml from "ansi-to-html";
 import { FunctionComponent } from "react";
 import PlotlyPlot from "./PlotlyPlot";
 import CodeCellEditor from "./CodeCellEditor";
+import DOMPurify from "dompurify";
+import HtmlInIframeIfTrusted from "./HtmlInIframeIfTrusted";
 
 interface CodeCellViewProps {
   width: number;
@@ -11,6 +13,8 @@ interface CodeCellViewProps {
   onChange: (cell: ImmutableCodeCell) => void;
   requiresFocus?: boolean;
   onFocus?: () => void;
+  notebookIsTrusted: boolean;
+  setNotebookIsTrusted: (trusted: boolean) => void;
 }
 
 const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
@@ -19,6 +23,8 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
   onChange,
   requiresFocus,
   onFocus,
+  notebookIsTrusted,
+  setNotebookIsTrusted,
 }) => {
   return (
     <div
@@ -55,24 +61,26 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
             if (output.output_type === "stream") {
               const color = output.name === "stderr" ? "darkred" : "black";
               const ansiToHtml = new AnsiToHtml();
-              const html = ansiToHtml.toHtml(output.text);
+              const unsafeHtml = ansiToHtml.toHtml(output.text);
+              const thisHtmlIsSafe = DOMPurify.sanitize(unsafeHtml);
               return (
                 <div
                   className="CodeCellOutput-stream"
                   key={index}
                   style={{ color }}
-                  dangerouslySetInnerHTML={{ __html: html }}
+                  dangerouslySetInnerHTML={{ __html: thisHtmlIsSafe }}
                 />
               );
             } else if (output.output_type === "error") {
               const ansiToHtml = new AnsiToHtml();
-              const html = ansiToHtml.toHtml(output.traceback.join("\n"));
+              const unsafeHtml = ansiToHtml.toHtml(output.traceback.join("\n"));
+              const thisHtmlIsSafe = DOMPurify.sanitize(unsafeHtml);
               return (
                 <div
                   className="CodeCellOutput-error"
                   key={index}
                   style={{ color: "darkred" }}
-                  dangerouslySetInnerHTML={{ __html: html }}
+                  dangerouslySetInnerHTML={{ __html: thisHtmlIsSafe }}
                 />
               );
             } else if (
@@ -92,10 +100,10 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                 );
               } else if ("image/svg+xml" in output.data) {
                 const svgXml = output.data["image/svg+xml"] || "";
-                // this is the actual svg xml, not base64 encoded
+                const thisHtmlIsSafe = DOMPurify.sanitize(svgXml);
                 return (
                   <div key={index}>
-                    <div dangerouslySetInnerHTML={{ __html: svgXml }} />
+                    <div dangerouslySetInnerHTML={{ __html: thisHtmlIsSafe }} />
                   </div>
                 );
               } else if ("application/vnd.plotly.v1+json" in output.data) {
@@ -115,94 +123,19 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
                   />
                 );
               } else if ("text/html" in output.data) {
-                const html = output.data["text/html"] as string;
-                // if the html is just an iframe itself, then we don't need to wrap it in another iframe
-                if (html.startsWith("<iframe")) {
-                  return (
-                    <div
-                      key={index}
-                      style={{ width: "100%", overflowX: "auto" }}
-                      dangerouslySetInnerHTML={{ __html: html }}
-                    />
-                  );
-                } else {
-                  // Wrap HTML content with base styles and create a sandboxed iframe
-                  // Doing this without an iframe doesn't work if the html contains scripts to be executed (e.g., Altair)
-                  const wrappedHtml = `
-                    <!DOCTYPE html>
-                    <html>
-                      <head>
-                        <style>
-                          body {
-                            margin: 0;
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                            line-height: 1.5;
-                          }
-                          table {
-                            border-collapse: collapse;
-                            border-spacing: 0;
-                            margin: 1em 0;
-                            font-size: 13px;
-                          }
-                          thead {
-                            border-bottom: 2px solid #ddd;
-                            background-color: #f9f9f9;
-                            text-align: right;
-                          }
-                          tbody tr:nth-child(even) {
-                            background-color: #f5f5f5;
-                          }
-                          tbody tr:hover {
-                            background-color: rgba(66, 165, 245, 0.1);
-                          }
-                          th, td {
-                            padding: 0.5em 1em;
-                            text-align: right;
-                            border: 1px solid #ddd;
-                            max-width: 400px;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                          }
-                          th:first-child, td:first-child {
-                            text-align: left;
-                          }
-                          th {
-                            font-weight: bold;
-                            vertical-align: bottom;
-                          }
-                          tr:last-child td {
-                            border-bottom: 1px solid #ddd;
-                          }
-                        </style>
-                      </head>
-                      <body>${html}</body>
-                    </html>
-                  `;
-                  return (
-                    <div key={index} style={{ width: "100%" }}>
-                      <iframe
-                        srcDoc={wrappedHtml}
-                        style={{
-                          width: "100%",
-                          border: "none",
-                          overflow: "hidden",
-                        }}
-                        onLoad={(e) => {
-                          // Adjust iframe height to match content
-                          const iframe = e.target as HTMLIFrameElement;
-                          const height =
-                            iframe.contentWindow?.document.documentElement
-                              .scrollHeight;
-                          if (height) {
-                            iframe.style.height = `${height}px`;
-                          }
-                        }}
-                        sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
-                      />
-                    </div>
-                  );
-                }
+                const htmlUnsafeUnlessInsideATrustedIframe = output.data[
+                  "text/html"
+                ] as string;
+                return (
+                  <HtmlInIframeIfTrusted
+                    key={index}
+                    htmlUnsafeUnlessInsideATrustedIframe={
+                      htmlUnsafeUnlessInsideATrustedIframe
+                    }
+                    notebookIsTrusted={notebookIsTrusted}
+                    setNotebookIsTrusted={setNotebookIsTrusted}
+                  />
+                );
               } else {
                 // console.log("Using plain text output", output);
                 return <div key={index}>{plainText}</div>;

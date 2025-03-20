@@ -83,8 +83,8 @@ const DownloadOptionsDialog: FunctionComponent<DownloadOptionsDialogProps> = ({
                 <ContentCopyIcon />
               </ListItemIcon>
               <ListItemText
-                primary="Copy as Python"
-                secondary="Copy Jupytext format to clipboard"
+                primary="Copy as Jupytext"
+                secondary="Copy Jupytext (.py) format to clipboard"
               />
             </ListItemButton>
           </ListItem>

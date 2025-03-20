@@ -42,12 +42,18 @@ export function saveNotebookToStorageDebounced(
   notebook: any,
   parsedUrlParams: ParsedUrlParams | null,
   localname?: string,
+  isTrusted?: boolean,
 ): void {
   notebookToSave = notebook;
   if (!notebookSaveScheduled) {
     notebookSaveScheduled = true;
     setTimeout(() => {
-      saveNotebookToStorage(notebookToSave, parsedUrlParams, localname);
+      saveNotebookToStorage(
+        notebookToSave,
+        parsedUrlParams,
+        localname,
+        isTrusted,
+      );
       notebookSaveScheduled = false;
     }, 1000);
   }
@@ -63,6 +69,7 @@ interface NotebookMetadata {
   size: number;
   numCells: number;
   lastModified: string;
+  isTrusted?: boolean;
 }
 
 // Initialize database
@@ -125,11 +132,15 @@ async function initDB(): Promise<IDBDatabase> {
 }
 
 // Helper to calculate notebook metadata
-function calculateMetadata(notebook: any): NotebookMetadata {
+function calculateMetadata(
+  notebook: any,
+  o: { isTrusted?: boolean },
+): NotebookMetadata {
   return {
     size: JSON.stringify(notebook).length,
     numCells: notebook.cells?.length || 0,
     lastModified: new Date().toISOString(),
+    isTrusted: o.isTrusted,
   };
 }
 
@@ -137,11 +148,12 @@ export async function saveNotebookToStorage(
   notebook: any,
   parsedUrlParams: ParsedUrlParams | null,
   localname?: string,
+  isTrusted?: boolean,
 ): Promise<void> {
   try {
     const db = await initDB();
     const key = getStorageKey(parsedUrlParams, localname);
-    const metadata = calculateMetadata(notebook);
+    const metadata = calculateMetadata(notebook, { isTrusted });
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(

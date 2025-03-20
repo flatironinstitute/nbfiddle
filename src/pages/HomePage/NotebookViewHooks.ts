@@ -88,7 +88,10 @@ export const useLoadRemoteNotebook = (
   setLoadError: (e: string | undefined) => void,
   setRemoteNotebook: (n: ImmutableNotebook) => void,
   setRemoteNotebookFilePath: (p: string) => void,
-  setNotebook: (n: ImmutableNotebook) => void,
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void,
   setActiveCellId: (id: string) => void,
 ) => {
   return useCallback(async () => {
@@ -107,7 +110,7 @@ export const useLoadRemoteNotebook = (
       const notebook0 =
         localModifiedNotebookReconstructed || reconstructedNotebook;
 
-      setNotebook(notebook0);
+      setNotebook(notebook0, { isTrusted: false });
       if (notebook0.cellOrder.size > 0) {
         setActiveCellId(notebook0.cellOrder.first());
       }
@@ -133,7 +136,10 @@ export const useLoadSavedNotebook = (
   localname: string | undefined,
   loadRemoteNotebook: () => void,
   setLoadError: (e: string | undefined) => void,
-  setNotebook: (n: ImmutableNotebook) => void,
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void,
   setActiveCellId: (id: string) => void,
 ) => {
   useEffect(() => {
@@ -144,7 +150,9 @@ export const useLoadSavedNotebook = (
         .then((x) => {
           if (x) {
             const reconstructedNotebook = fromJS(x.notebook);
-            setNotebook(reconstructedNotebook);
+            setNotebook(reconstructedNotebook, {
+              isTrusted: x.metadata.isTrusted || false,
+            });
             if (reconstructedNotebook.cellOrder.size > 0) {
               setActiveCellId(reconstructedNotebook.cellOrder.first());
             }
@@ -170,7 +178,10 @@ export const useExecute = (
   dispatchExecution: (action: ExecutionAction) => void,
   activeCellId: string | undefined,
   notebook: ImmutableNotebook,
-  setNotebook: (n: ImmutableNotebook) => void,
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void,
   sessionClient: PythonSessionClient | null,
   canceledRef: React.MutableRefObject<boolean>,
   setActiveCellId: (id: string | undefined) => void,
@@ -197,7 +208,7 @@ export const useExecute = (
 
         const newCodeCell = codeCell.set("outputs", emptyCodeCell.outputs);
         newNotebook = newNotebook.setIn(["cellMap", activeCellId], newCodeCell);
-        setNotebook(newNotebook);
+        setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
 
         dispatchExecution({ type: "start-execution", cellId: activeCellId });
 
@@ -211,7 +222,7 @@ export const useExecute = (
               ["cellMap", activeCellId],
               newCodeCell,
             );
-            setNotebook(newNotebook);
+            setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
           },
           canceledRef,
         );
@@ -241,7 +252,7 @@ export const useExecute = (
           setCellIdRequiringFocus(null);
         }
       }
-      setNotebook(newNotebook);
+      setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
     },
     [
       currentCellExecution,
@@ -290,7 +301,10 @@ export const useGoToPreviousNextCell = (
 
 export const useToggleCellType = (
   notebook: ImmutableNotebook,
-  setNotebook: (n: ImmutableNotebook) => void,
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void,
 ) => {
   return useCallback(
     (cellId: string) => {
@@ -308,7 +322,7 @@ export const useToggleCellType = (
           .set("metadata", cell.get("metadata"));
       }
       const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
-      setNotebook(newNotebook);
+      setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
     },
     [notebook, setNotebook],
   );
@@ -316,7 +330,10 @@ export const useToggleCellType = (
 
 export const useCellOperations = (
   notebook: ImmutableNotebook,
-  setNotebook: (n: ImmutableNotebook) => void,
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void,
   setActiveCellId: (id: string | undefined) => void,
   setCellIdRequiringFocus: (id: string | null) => void,
 ) => {
@@ -325,7 +342,7 @@ export const useCellOperations = (
       const { newNotebook, newCellId } = addCellAfterCell(notebook, cellId);
       setActiveCellId(newCellId);
       setCellIdRequiringFocus(null);
-      setNotebook(newNotebook);
+      setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
     },
     [notebook, setNotebook, setActiveCellId, setCellIdRequiringFocus],
   );
@@ -336,7 +353,7 @@ export const useCellOperations = (
       if (!v) return;
       setActiveCellId(v.newCellId);
       setCellIdRequiringFocus(null);
-      setNotebook(v.newNotebook);
+      setNotebook(v.newNotebook, { isTrusted: undefined }); // don't change the trusted status
     },
     [notebook, setNotebook, setActiveCellId, setCellIdRequiringFocus],
   );
@@ -347,7 +364,7 @@ export const useCellOperations = (
         notebook,
         cellId,
       );
-      setNotebook(newNotebook);
+      setNotebook(newNotebook, { isTrusted: undefined }); // don't change the trusted status
       setActiveCellId(newActiveCellId);
     },
     [notebook, setNotebook, setActiveCellId],
