@@ -113,15 +113,24 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
             <Link href={gistLink} target="_blank" rel="noreferrer">
               view the Gist on GitHub
             </Link>{" "}
-            or <Link href={nbfiddleLink}>open the notebook in nbfiddle</Link>.
+            if needed.
           </Typography>
-          <Typography variant="body2" color="textSecondary">
-            You may also continue working with your current notebook without
-            loading the new Gist.
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Note: Clicking "Just close" below will keep you on your current
+            notebook version without the link to the Gist. The Gist has been
+            saved and can be accessed later.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>Just close</Button>
+          <Button
+            href={nbfiddleLink}
+            color="primary"
+            variant="contained"
+            autoFocus
+          >
+            Open in NBFiddle
+          </Button>
         </DialogActions>
       </Dialog>
     );
