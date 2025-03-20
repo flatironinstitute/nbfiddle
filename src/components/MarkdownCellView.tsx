@@ -33,9 +33,17 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
     );
   }
 
+  const source = cell.get("source");
+
   return (
     <div
       onDoubleClick={() => onStartEditing()}
+      onClick={() => {
+        // if the content is empty, start editing on a single click
+        if (source.trim() === "") {
+          onStartEditing();
+        }
+      }}
       style={{
         width,
         marginBottom: 16,
@@ -44,7 +52,7 @@ const MarkdownCellView: FunctionComponent<MarkdownCellViewProps> = ({
       }}
     >
       <div className="markdown-content" style={{ padding: "8px 4px" }}>
-        <ReactMarkdown>{cell.get("source")}</ReactMarkdown>
+        <ReactMarkdown>{source}</ReactMarkdown>
       </div>
     </div>
   );
