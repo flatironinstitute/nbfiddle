@@ -104,6 +104,7 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
           renderLineHighlight: "none",
           theme: "vs",
           wordWrap: "on",
+          overviewRulerLanes: 0, // hide the overview ruler
         }}
         onMount={handleEditorMount}
       />

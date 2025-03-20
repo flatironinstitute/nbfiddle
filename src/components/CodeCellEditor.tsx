@@ -118,6 +118,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
             horizontal: "auto",
             alwaysConsumeMouseWheel: false, // very important so that the wheel events will not get consumed by the editor and we can scroll the main document
           },
+          overviewRulerLanes: 0, // hide the overview ruler
         }}
         onMount={handleEditorMount}
       />

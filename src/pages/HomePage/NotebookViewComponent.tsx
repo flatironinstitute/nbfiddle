@@ -258,7 +258,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       style={{
                         position: "absolute",
                         top: 4,
-                        right: 4,
+                        right: 35,
                         display: "flex",
                         gap: 4,
                         zIndex: 100,
@@ -393,7 +393,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       {cell.cell_type === "code" ? (
                         <CodeCellView
                           key={cellId}
-                          width={notebookWidth - 120} // figure out a better way to do this
+                          width={notebookWidth - 100} // figure out a better way to do this
                           cell={cell}
                           onChange={(newCell: ImmutableCodeCell) => {
                             const newNotebook = notebook.setIn(
@@ -429,7 +429,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
                           key={cellId}
-                          width={notebookWidth - 120} // figure out a better way to do this
+                          width={notebookWidth - 100} // figure out a better way to do this
                           cell={cell}
                           onChange={(newCell: ImmutableMarkdownCell) => {
                             const newNotebook = notebook.setIn(
