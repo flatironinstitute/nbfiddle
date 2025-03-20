@@ -25,7 +25,7 @@
       }(window.location))
 
       // Redirect from .org to .app while preserving query parameters
-      if (window.location.hostname === 'nbfiddle.app') {
+      if (window.location.hostname === 'nbfiddle.org') {
         const newUrl = 'https://nbfiddle.app' + window.location.pathname + window.location.search + window.location.hash;
         window.location.replace(newUrl);
       }

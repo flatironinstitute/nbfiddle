@@ -100,7 +100,7 @@ conda activate nbfiddle
 
 Start jupyter lab
 
-jupyter lab --NotebookApp.allow_origin_pat='^(https://nbfiddle\.org|http://localhost:5173|https://neurosift.app)$' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0 --NotebookApp.allow_remote_access="True" --MappingKernelManager.cull_interval="300" --MappingKernelManager.cull_idle_timeout="300" --MappingKernelManager.cull_connected="True"
+jupyter lab --NotebookApp.allow_origin_pat='^(https://nbfiddle\.app|http://localhost:5173|https://neurosift.app)$' --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --ip=0.0.0.0 --NotebookApp.allow_remote_access="True" --MappingKernelManager.cull_interval="300" --MappingKernelManager.cull_idle_timeout="300" --MappingKernelManager.cull_connected="True"
 
 Note the allow_remote_access flag and the allow_origin_pat flag
 
