@@ -411,6 +411,20 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                           setNotebookIsTrusted={() => {
                             setNotebook(notebook, { isTrusted: true });
                           }}
+                          cellCollapsed={
+                            cell.metadata.get("collapsed") || false
+                          }
+                          setCellCollapsed={(collapsed: boolean) => {
+                            const newCell = cell.setIn(
+                              ["metadata", "collapsed"],
+                              collapsed,
+                            );
+                            const newNotebook = notebook.setIn(
+                              ["cellMap", cellId],
+                              newCell,
+                            );
+                            setNotebook(newNotebook, { isTrusted: undefined });
+                          }}
                         />
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
