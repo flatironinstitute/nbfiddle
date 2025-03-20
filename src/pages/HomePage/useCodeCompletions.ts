@@ -11,8 +11,8 @@ let lastQueryCompletionTime = 0;
 let inProgress = false;
 let completionNum = 1;
 const doCompletion = async (o: {
-  previousLines: string[];
-  currentLineBeforeCursor: string;
+  previousText: string;
+  nextText: string;
 }): Promise<string | undefined> => {
   const thisCompletionNum = completionNum + 1;
   completionNum = thisCompletionNum;
@@ -94,17 +94,14 @@ const getSystemMessageText = () => `
 
 ### Instructions:
 - You are a world class coding assistant.
-- You are going to provide a code completion
-- You will be given the previous lines of code and the current line before the cursor.
-- You need to provide the completion for the current line.
-- If the current line before the cursor is empty, you should predict what the user would like based on the previous lines.
+- You are going to provide a code completions or insertions
+- For the active notebook cell, you will be given the code of the active notebook cell with <<>> being inserted at the cursor position.
 - This is not a conversation, so please do not ask questions or prompt for additional information.
-- Limit to yourself to at most 3 or 4 lines of code.
 
 Your output is going to be structured as JSON as follows:
 
 {
-  "completionOfCurrentLine": "..."
+  "completion": "..."
 }
 
 ### Notes
@@ -114,10 +111,9 @@ Your output is going to be structured as JSON as follows:
 - Never suggest a newline after a space or newline.
 - Ensure that newline suggestions follow the same indentation as the current line.
 - Only ever return the code snippet, do not return any markdown unless it is part of the code snippet.
-- Do not return anything that is not valid code.
 - If you do not have a suggestion, return an empty string.
 
-Here's some special context about the previous cells in the notebook that the user is editing (if provided):
+Here's some special context about the entire notebook that the user is editing (if provided):
 ${reduce(specialContextForAI)}
 `;
 
@@ -131,8 +127,8 @@ let totalCost = 0;
 export const getTotalCost = () => totalCost;
 
 const doQueryCompletion = async (o: {
-  previousLines: string[];
-  currentLineBeforeCursor: string;
+  previousText: string;
+  nextText: string;
 }): Promise<string | undefined> => {
   // const model = "openai/gpt-4o-mini";
 
@@ -146,11 +142,14 @@ const doQueryCompletion = async (o: {
     role: "system",
     content: getSystemMessageText(),
   };
-  const obj = {
-    previousLines: o.previousLines.join("\n"),
-    currentLineBeforeCursor: o.currentLineBeforeCursor,
-  };
-  const userMessageText = JSON.stringify(obj);
+  // const obj = {
+  //   previousLines: o.previousLines.join("\n"),
+  //   currentLineBeforeCursor: o.currentLineBeforeCursor,
+  //   currentLineAfterCursor: o.currentLineAfterCursor,
+  //   nextLines: o.nextLines.join("\n"),
+  // };
+  // const userMessageText = JSON.stringify(obj);
+  const userMessageText = `${o.previousText}<<>>${o.nextText}`;
   const userMessage: ORMessage = {
     role: "user",
     content: userMessageText,
@@ -197,7 +196,7 @@ const doQueryCompletion = async (o: {
   }
   try {
     const completionObj = flexibleJsonParse(content);
-    return completionObj.completionOfCurrentLine;
+    return completionObj.completion;
   } catch {
     console.error("Error parsing completion:", content);
     return undefined;
@@ -248,21 +247,29 @@ const useCodeCompletions = () => {
           const code = model.getValue();
           const lines = code.split("\n");
           const currentLine = lines[position.lineNumber - 1];
-          const isAtEndOfLine = position.column === currentLine.length + 1;
-          if (!isAtEndOfLine) {
+
+          const previousLines = lines.slice(0, position.lineNumber - 1);
+          const currentLineBeforeCursor = currentLine.slice(
+            0,
+            position.column - 1,
+          );
+          const currentLineAfterCursor = currentLine.slice(position.column - 1);
+          const nextLines = lines.slice(position.lineNumber);
+          const previousText =
+            previousLines.join("\n") + "\n" + currentLineBeforeCursor;
+          const nextText = currentLineAfterCursor + "\n" + nextLines.join("\n");
+
+          // we are sufficiently at the end if currentLineAfterCursor does not have any alphanumeric characters
+          const isSufficientlyAtEndOfLine = !/\w/.test(currentLineAfterCursor);
+          if (!isSufficientlyAtEndOfLine) {
             return {
               items: [],
               commands: [],
             };
           }
-          const previousLines = lines.slice(0, position.lineNumber);
-          const currentLineBeforeCursor = currentLine.slice(
-            0,
-            position.column - 1,
-          );
           const completionText = await doCompletion({
-            previousLines,
-            currentLineBeforeCursor,
+            previousText,
+            nextText,
           });
           return {
             items: completionText

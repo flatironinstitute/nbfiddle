@@ -382,10 +382,9 @@ export const useSpecialContextForAI = (
   activeCellId: string | undefined,
 ) => {
   useEffect(() => {
-    // All code in cells leading up to the active cell
+    // Code from all cells
     let codeCells = "";
     for (const cellId of notebook.cellOrder) {
-      if (cellId === activeCellId) break;
       const cell = notebook.cellMap.get(cellId);
       if (!cell) continue;
       if (cell.cell_type === "code") {
