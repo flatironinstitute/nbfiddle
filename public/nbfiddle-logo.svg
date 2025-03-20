@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="200" height="200" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#a8c0ff"/>
-            <stop offset="100%" style="stop-color:#8f9ed4"/>
-        </linearGradient>
-    </defs>
+<svg width="120" height="120" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!-- Main notebook shape -->
+    <rect x="20" y="15" width="80" height="90" rx="4" fill="#ffffff" stroke="#2962ff" stroke-width="3"/>
 
-    <path
-        d="M160,140 L160,50 C160,33.431 146.569,20 130,20 L70,20 C53.431,20 40,33.431 40,50 L40,130 C40,146.569 53.431,160 70,160 L130,160 L160,190 L160,140"
-        fill="url(#brainGradient)"
-        stroke="#7d8cc4"
-        stroke-width="2"
-    />
+    <!-- Code cells representation -->
+    <rect x="30" y="25" width="60" height="12" rx="2" fill="#e3f2fd"/>
+    <rect x="35" y="29" width="40" height="4" fill="#2962ff" opacity="0.7"/>
+
+    <rect x="30" y="45" width="60" height="12" rx="2" fill="#e3f2fd"/>
+    <rect x="35" y="49" width="50" height="4" fill="#2962ff" opacity="0.7"/>
+
+    <!-- Interactive plot representation -->
+    <rect x="30" y="65" width="60" height="30" rx="2" fill="#bbdefb"/>
+    <path d="M35 85 Q 45 75, 55 80 T 75 70 T 85 75" fill="none" stroke="#1565c0" stroke-width="2"/>
+    <circle cx="55" cy="80" r="2" fill="#1565c0"/>
+    <circle cx="75" cy="70" r="2" fill="#1565c0"/>
+
+    <!-- Python reference -->
+    <g transform="translate(82, 88)">
+        <circle cx="0" cy="0" r="8" fill="#ffc107"/>
+        <circle cx="0" cy="0" r="8" fill="#2962ff" opacity="0.2"/>
+    </g>
 </svg>

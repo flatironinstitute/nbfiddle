@@ -134,28 +134,43 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
     <JupyterConnectivityProvider mode="jupyter-server">
       <Box sx={{ width: "100%", height: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={selectedTab}
-            onChange={(_, newValue) => setSelectedTab(newValue)}
-            variant="scrollable"
-            scrollButtons={true}
-            allowScrollButtonsMobile={true}
-            sx={{
-              minHeight: 36,
-              "& .MuiTab-root": {
-                minHeight: 36,
-                py: 0,
-                px: 1.5,
-                minWidth: "auto",
-              },
-            }}
+          <Box
+            sx={{ display: "flex", alignItems: "center", padding: 0, gap: 0 }}
           >
-            <Tab label="Notebook" />
-            <Tab label="Jupyter Config" />
-            <Tab label="Storage" />
-            <Tab label="Settings" />
-            <Tab label="About" />
-          </Tabs>
+            {width > 700 && (
+              <img
+                src="/nbfiddle-logo.svg"
+                alt="nbfiddle logo"
+                style={{
+                  height: "28px",
+                  marginLeft: "8px",
+                  marginRight: "-15px",
+                }}
+              />
+            )}
+            <Tabs
+              value={selectedTab}
+              onChange={(_, newValue) => setSelectedTab(newValue)}
+              variant="scrollable"
+              scrollButtons={true}
+              allowScrollButtonsMobile={true}
+              sx={{
+                minHeight: 36,
+                "& .MuiTab-root": {
+                  minHeight: 36,
+                  py: 0,
+                  px: 1.5,
+                  minWidth: "auto",
+                },
+              }}
+            >
+              <Tab label="Notebook" />
+              <Tab label="Jupyter Config" />
+              <Tab label="Storage" />
+              <Tab label="Settings" />
+              <Tab label="About" />
+            </Tabs>
+          </Box>
         </Box>
         <Box
           sx={{
