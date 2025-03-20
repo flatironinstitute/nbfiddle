@@ -1,6 +1,6 @@
 # nbfiddle
 
-[nbfiddle.org](https://nbfiddle.org) – A streamlined approach to Python Jupyter notebooks
+[nbfiddle.app](https://nbfiddle.app) – A streamlined approach to Python Jupyter notebooks
 
 [View the source code on GitHub or submit an issue](https://github.com/flatironinstitute/nbfiddle)
 
@@ -8,7 +8,7 @@
 
 nbfiddle is a web-based Jupyter notebook interface that leverages your browser’s storage for saving and managing notebooks. It is designed for self-contained Python notebooks that focus on data analysis, particularly when working with remote data sources such as the DANDI archive.
 
-Here is an example notebook, hosted as a GitHub Gist, with interactive Plotly graphs when opened in nbfiddle: [plotly-demo-for-nbfiddle.ipynb](https://nbfiddle.org/?url=https://gist.github.com/magland/366cfffb025dd3cfee27e5cadb3d7f53%23file-plotly-demo-for-nbfiddle-ipynb)
+Here is an example notebook, hosted as a GitHub Gist, with interactive Plotly graphs when opened in nbfiddle: [plotly-demo-for-nbfiddle.ipynb](https://nbfiddle.app/?url=https://gist.github.com/magland/366cfffb025dd3cfee27e5cadb3d7f53%23file-plotly-demo-for-nbfiddle-ipynb)
 
 ## Use Cases
 

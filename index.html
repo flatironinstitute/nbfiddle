@@ -23,6 +23,12 @@
           );
         }
       }(window.location))
+
+      // Redirect from .org to .app while preserving query parameters
+      if (window.location.hostname === 'nbfiddle.app') {
+        const newUrl = 'https://nbfiddle.app' + window.location.pathname + window.location.search + window.location.hash;
+        window.location.replace(newUrl);
+      }
     </script>
     <link rel="icon" type="image/png" href="/nbfiddle-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

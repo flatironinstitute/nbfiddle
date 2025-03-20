@@ -1,5 +1,5 @@
-import { FunctionComponent, useMemo, useRef } from "react";
 import DOMPurify from "dompurify";
+import { FunctionComponent, useMemo } from "react";
 
 const HtmlInIframeIfTrusted: FunctionComponent<{
   htmlUnsafeUnlessInsideATrustedIframe: string;
