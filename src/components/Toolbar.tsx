@@ -200,7 +200,18 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               </IconButton>
             </Tooltip>
           )}
-          1
+          <Tooltip title="Restart Kernel">
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setRestartDialogOpen(true)}
+                disabled={!jupyterServerIsAvailable}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
           {parsedUrlParams && (
             <>
               {hasLocalChanges && (
@@ -249,19 +260,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Restart Kernel">
-            <span>
-              <IconButton
-                size="small"
-                color="primary"
-                onClick={() => setRestartDialogOpen(true)}
-                disabled={!jupyterServerIsAvailable}
-              >
-                <RestartAltIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
-
           <Tooltip title="Notebook Actions">
             <IconButton
               size="small"

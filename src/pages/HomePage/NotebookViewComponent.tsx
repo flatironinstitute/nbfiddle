@@ -457,6 +457,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 </div>
               );
             })}
+            <div>&nbsp;</div>
             <div
               style={{
                 display: "flex",
@@ -516,9 +517,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 Add Markdown Cell
               </button>
             </div>
-            <div>&nbsp;</div>
-            <div>&nbsp;</div>
-            <div>&nbsp;</div>
             <div>&nbsp;</div>
             <div>&nbsp;</div>
           </Paper>
