@@ -7,6 +7,8 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
+import UndoIcon from "@mui/icons-material/Undo";
+import RedoIcon from "@mui/icons-material/Redo";
 import {
   AppBar,
   Box,
@@ -24,7 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import { fromJS, ImmutableNotebook } from "@nteract/commutable";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useState, useRef, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
@@ -58,6 +60,32 @@ type ToolbarProps = {
   onUpdateGist: (token: string) => Promise<void>;
   onSaveGist: (token: string, fileName: string) => Promise<string>;
   notebook: ImmutableNotebook;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+};
+
+const useElementWidth = (ref: React.RefObject<HTMLElement>) => {
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      if (ref.current) {
+        setWidth(ref.current.getBoundingClientRect().width);
+      }
+    };
+
+    updateWidth();
+    const resizeObserver = new ResizeObserver(updateWidth);
+    if (ref.current) {
+      resizeObserver.observe(ref.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [ref]);
+
+  return width;
 };
 
 const Toolbar: FunctionComponent<ToolbarProps> = ({
@@ -75,6 +103,10 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onClearOutputs,
   onClearNotebook,
   onSetNotebook,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
   const navigate = useNavigate();
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
@@ -86,6 +118,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   const [localSaveDialogOpen, setLocalSaveDialogOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(menuAnchorEl);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarWidth = useElementWidth(toolbarRef);
 
   const handleRestartSession = () => {
     setRestartDialogOpen(false);
@@ -131,6 +165,7 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
       }}
     >
       <MuiToolbar
+        ref={toolbarRef}
         variant="dense"
         sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
       >
@@ -215,6 +250,34 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
               </IconButton>
             </span>
           </Tooltip>
+          {toolbarWidth >= 300 && (
+            <>
+              <Tooltip title="Undo">
+                <span>
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => onUndo()}
+                    disabled={!canUndo}
+                  >
+                    <UndoIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title="Redo">
+                <span>
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => onRedo()}
+                    disabled={!canRedo}
+                  >
+                    <RedoIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </>
+          )}
           {parsedUrlParams && (
             <>
               {hasLocalChanges && (

@@ -30,6 +30,10 @@ type NotebookViewComponentProps = {
   currentCellExecution: ExecutionState;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   onClearOutputs: () => void;
   onClearNotebook: () => void;
   onCancel: () => void;
@@ -89,6 +93,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   cellIdRequiringFocus,
   setCellIdRequiringFocus,
   notebookIsTrusted,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
   const isMobile = width <= 800;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
@@ -166,6 +174,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           onJupyterConfigClick={onJupyterConfigClick}
           onClearOutputs={onClearOutputs}
           onClearNotebook={onClearNotebook}
+          onUndo={onUndo}
+          onRedo={onRedo}
+          canUndo={canUndo}
+          canRedo={canRedo}
         />
       </div>
       <ScrollY
@@ -233,6 +245,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 setActiveCellId(notebook.cellOrder.first());
               } else if (event.key === "End") {
                 setActiveCellId(notebook.cellOrder.last());
+              } else if (event.key === "z" && event.ctrlKey) {
+                onUndo();
+              } else if (event.key === "y" && event.ctrlKey) {
+                onRedo();
               }
             }}
           >

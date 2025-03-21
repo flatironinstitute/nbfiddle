@@ -62,6 +62,16 @@ type NotebookViewProps = {
   onJupyterConfigClick?: () => void;
 };
 
+type NotebookHistoryState = {
+  historyIndex: number;
+  notebookHistory: ImmutableNotebook[];
+};
+
+const defaultNotebookHistoryState: NotebookHistoryState = {
+  historyIndex: -1,
+  notebookHistory: [],
+};
+
 const NotebookView: FunctionComponent<NotebookViewProps> = ({
   width,
   height,
@@ -72,16 +82,65 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
   const [notebook, setNotebook0] = useState<ImmutableNotebook>(emptyNotebook);
-  const [notebookIsTrusted, setNotebookIsTrusted] = useState(true); // start trusting the empty notebook, but if we import or load from remote, then this will be set to false
+  const [notebookIsTrusted, setNotebookIsTrusted] = useState(true);
+  const [notebookHistory, setNotebookHistory] = useState<NotebookHistoryState>(
+    defaultNotebookHistoryState,
+  );
+
+  // reset the history if parsedUrlParams or localname changes
+  useEffect(() => {
+    setNotebookHistory(defaultNotebookHistoryState);
+  }, [parsedUrlParams, localname]);
+
   const setNotebook = useCallback(
     (notebook: ImmutableNotebook, o: { isTrusted?: boolean }) => {
       setNotebook0(notebook);
       if (o.isTrusted !== undefined) {
         setNotebookIsTrusted(o.isTrusted);
       }
+      // Add new state to history, removing any future states if we're not at the end
+      setNotebookHistory((prev) => {
+        let newHistory = prev.notebookHistory.slice(0, prev.historyIndex + 1);
+        newHistory.push(notebook);
+        // we want a maximum of 30 notebook states in the history
+        // (don't worry, the data are note duplicated, it's largerly references)
+        if (newHistory.length > 30) {
+          newHistory = newHistory.slice(-30);
+        }
+        return {
+          historyIndex: newHistory.length - 1,
+          notebookHistory: newHistory,
+        };
+      });
     },
     [],
   );
+
+  const handleUndo = useCallback(() => {
+    setNotebookHistory((prev) => {
+      if (prev.historyIndex - 1 >= 0) {
+        setNotebook0(prev.notebookHistory[prev.historyIndex - 1]);
+        return {
+          historyIndex: prev.historyIndex - 1,
+          notebookHistory: prev.notebookHistory,
+        };
+      }
+      return prev;
+    });
+  }, [setNotebook0]);
+
+  const handleRedo = useCallback(() => {
+    setNotebookHistory((prev) => {
+      if (prev.historyIndex + 1 < prev.notebookHistory.length) {
+        setNotebook0(prev.notebookHistory[prev.historyIndex + 1]);
+        return {
+          historyIndex: prev.historyIndex + 1,
+          notebookHistory: prev.notebookHistory,
+        };
+      }
+      return prev;
+    });
+  }, []);
   const [remoteNotebookFilePath, setRemoteNotebookFilePath] = useState<
     string | null
   >(null);
@@ -257,6 +316,13 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       currentCellExecution={currentCellExecution}
       onRestartSession={handleRestartSession}
       sessionClient={sessionClient}
+      onUndo={handleUndo}
+      onRedo={handleRedo}
+      canUndo={notebookHistory.historyIndex > 0}
+      canRedo={
+        notebookHistory.historyIndex <
+        notebookHistory.notebookHistory.length - 1
+      }
       onCancel={() => {
         canceledRef.current = true;
       }}
