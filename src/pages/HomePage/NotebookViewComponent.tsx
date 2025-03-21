@@ -25,6 +25,7 @@ import { ExecutionState } from "./notebook/notebook-execution";
 type NotebookViewComponentProps = {
   width: number;
   height: number;
+  fullWidthEnabled?: boolean;
   loadError: string | undefined;
   onJupyterConfigClick?: () => void;
   currentCellExecution: ExecutionState;
@@ -64,6 +65,7 @@ type NotebookViewComponentProps = {
 const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   width,
   height,
+  fullWidthEnabled,
   loadError,
   onJupyterConfigClick,
   currentCellExecution,
@@ -141,7 +143,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   };
 
   const horizontalMargin = 10;
-  const maxWidth = 1200;
+  const maxWidth = fullWidthEnabled ? 99999 : 1200;
   const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth) - 15; // - 15 to leave room for the scrollbar
   const leftPadding = Math.max((width - notebookWidth) / 2, horizontalMargin);
   return (

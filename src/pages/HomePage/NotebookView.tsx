@@ -60,6 +60,7 @@ type NotebookViewProps = {
   parsedUrlParams: ParsedUrlParams | null;
   localname?: string;
   onJupyterConfigClick?: () => void;
+  fullWidthEnabled: boolean;
 };
 
 type NotebookHistoryState = {
@@ -78,6 +79,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   parsedUrlParams,
   localname,
   onJupyterConfigClick,
+  fullWidthEnabled,
 }) => {
   const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
@@ -351,6 +353,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       onClearOutputs={handleClearOutputs}
       onClearNotebook={handleClearNotebook}
       notebookIsTrusted={notebookIsTrusted}
+      fullWidthEnabled={fullWidthEnabled}
     />
   );
 };

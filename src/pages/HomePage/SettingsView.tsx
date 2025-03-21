@@ -11,6 +11,8 @@ type SettingsViewProps = {
   height: number;
   chatEnabled: boolean;
   setChatEnabled: (enabled: boolean) => void;
+  fullWidthEnabled: boolean;
+  setFullWidthEnabled: (enabled: boolean) => void;
 };
 
 const SettingsView: FunctionComponent<SettingsViewProps> = ({
@@ -18,6 +20,8 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
   height,
   chatEnabled,
   setChatEnabled,
+  fullWidthEnabled,
+  setFullWidthEnabled,
 }) => {
   const [apiKey, setApiKey] = useState(() => getOpenRouterApiKey() || "");
   const [codeCompletionsEnabled, setLocalCodeCompletionsEnabled] = useState(
@@ -125,6 +129,28 @@ const SettingsView: FunctionComponent<SettingsViewProps> = ({
               AI assistant cost this session: ${chatCost.toFixed(4)}
             </Box>
           )}
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={fullWidthEnabled}
+                onChange={(e) => {
+                  localStorage.setItem(
+                    "fullWidthEnabled",
+                    e.target.checked ? "1" : "0",
+                  );
+                  setFullWidthEnabled(e.target.checked);
+                }}
+              />
+            }
+            label="Enable full width notebook"
+          />
+          <Box sx={{ mt: 1, ml: 4, color: "text.secondary", maxWidth: 600 }}>
+            When enabled, the notebook will use the full available width of the
+            screen instead of being constrained to a fixed width.
+          </Box>
         </Box>
       </Box>
     </Box>

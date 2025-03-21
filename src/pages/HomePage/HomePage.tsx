@@ -85,6 +85,9 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [chatEnabled, setChatEnabled] = useState(
     () => localStorage.getItem("chatEnabled") === "1",
   );
+  const [fullWidthEnabled, setFullWidthEnabled] = useState(
+    () => localStorage.getItem("fullWidthEnabled") === "1",
+  );
 
   const location = useLocation();
   const urlSearch = location.search;
@@ -191,6 +194,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
               parsedUrlParams={notebookParams.parsedUrlParams}
               localname={notebookParams.localname}
               onJupyterConfigClick={() => setSelectedTab(1)}
+              fullWidthEnabled={fullWidthEnabled}
             />
           </HorizontalSplitter>
         </Box>
@@ -225,6 +229,8 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             height={height - 36}
             chatEnabled={chatEnabled}
             setChatEnabled={setChatEnabled}
+            fullWidthEnabled={fullWidthEnabled}
+            setFullWidthEnabled={setFullWidthEnabled}
           />
         </Box>
         <Box
