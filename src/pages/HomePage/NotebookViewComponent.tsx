@@ -215,11 +215,11 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               } else if (event.key === "ArrowDown") {
                 onGoToNextCell();
                 event.preventDefault();
-              } else if (event.key === "a" && activeCellId) {
+              } else if (event.key === "a" && !event.ctrlKey && activeCellId) {
                 onAddCellBeforeCell(activeCellId);
-              } else if (event.key === "b" && activeCellId) {
+              } else if (event.key === "b" && !event.ctrlKey && activeCellId) {
                 onAddCellAfterCell(activeCellId);
-              } else if (event.key === "x" && activeCellId) {
+              } else if (event.key === "x" && !event.ctrlKey && activeCellId) {
                 const okayToDelete = window.confirm(
                   "Are you sure you want to delete this cell?",
                 );
