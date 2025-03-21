@@ -149,6 +149,7 @@ export const useLoadSavedNotebook = (
       loadNotebookFromStorage(parsedUrlParams, localname)
         .then((x) => {
           if (x) {
+            console.info("Loading notebook", x);
             const reconstructedNotebook = fromJS(x.notebook);
             setNotebook(reconstructedNotebook, {
               isTrusted: x.metadata.isTrusted || false,

@@ -1,7 +1,13 @@
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ImmutableMarkdownCell } from "@nteract/commutable";
 import * as monaco from "monaco-editor";
-import { FunctionComponent, useCallback, useEffect, useRef } from "react";
+import {
+  FunctionComponent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import getGlobalEnterPressManager from "./globalEnterPressManager";
 
 type MarkdownCellEditorProps = {
@@ -17,14 +23,24 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
   onChange,
   requiresFocus,
 }) => {
+  const [editorHeight, setEditorHeight] = useState(20);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       const newCell = cell.set("source", value);
       onChange(newCell);
+
+      // Update height after content change
+      if (editorRef.current) {
+        const contentHeight = Math.max(
+          20,
+          editorRef.current.getContentHeight(),
+        );
+        setEditorHeight(contentHeight);
+      }
     }
   };
-
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const handleEditorMount: OnMount = useCallback((editor) => {
     // Create and register the focused context key
@@ -73,6 +89,16 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
     });
 
     editorRef.current = editor;
+
+    // Initial height calculation
+    const contentHeight = Math.max(20, editor.getContentHeight());
+    setEditorHeight(contentHeight);
+
+    // Add listener for content size changes
+    editor.onDidContentSizeChange(() => {
+      const newHeight = Math.max(20, editor.getContentHeight());
+      setEditorHeight(newHeight);
+    });
   }, []);
 
   useEffect(() => {
@@ -90,7 +116,7 @@ const MarkdownCellEditor: FunctionComponent<MarkdownCellEditorProps> = ({
   return (
     <div style={{ border: "2px solid #e0e0e0", padding: 3, width }}>
       <Editor
-        height={`${Math.max(1, cell.get("source").split("\n").length) * 20}px`}
+        height={`${editorHeight}px`}
         defaultLanguage="markdown"
         value={cell.get("source")}
         onChange={handleEditorChange}

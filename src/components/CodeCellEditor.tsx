@@ -1,7 +1,13 @@
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ImmutableCodeCell } from "@nteract/commutable";
 import * as monaco from "monaco-editor";
-import { FunctionComponent, useCallback, useEffect, useRef } from "react";
+import {
+  FunctionComponent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import getGlobalEnterPressManager from "./globalEnterPressManager";
 
 type CodeCellEditorProps = {
@@ -17,14 +23,24 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
   requiresFocus,
   onFocus,
 }) => {
+  const [editorHeight, setEditorHeight] = useState(35); // Initial height includes scrollbar space
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       const newCell = cell.set("source", value);
       onChange(newCell);
+
+      // Update height after content change
+      if (editorRef.current) {
+        const contentHeight = Math.max(
+          20,
+          editorRef.current.getContentHeight(),
+        );
+        setEditorHeight(contentHeight + 15); // Add space for horizontal scrollbar
+      }
     }
   };
-
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const handleEditorMount: OnMount = useCallback(
     (editor) => {
@@ -82,6 +98,16 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
       });
 
       editorRef.current = editor;
+
+      // Initial height calculation
+      const contentHeight = Math.max(20, editor.getContentHeight());
+      setEditorHeight(contentHeight + 15); // Add space for horizontal scrollbar
+
+      // Add listener for content size changes
+      editor.onDidContentSizeChange(() => {
+        const newHeight = Math.max(20, editor.getContentHeight());
+        setEditorHeight(newHeight + 15); // Add space for horizontal scrollbar
+      });
     },
     [onFocus],
   );
@@ -101,7 +127,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
   return (
     <div style={{ border: "2px solid #e0e0e0", padding: 3 }}>
       <Editor
-        height={`${Math.max(1, cell.get("source").split("\n").length) * 20 + 15}px`} // need to leave some space for a potential horizontal scrollbar
+        height={`${editorHeight}px`}
         defaultLanguage="python"
         value={cell.get("source")}
         onChange={handleEditorChange}

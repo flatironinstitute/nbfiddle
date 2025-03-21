@@ -1,12 +1,12 @@
 import CancelIcon from "@mui/icons-material/Cancel";
+import ClearAllIcon from "@mui/icons-material/ClearAll";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DownloadIcon from "@mui/icons-material/Download";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ClearAllIcon from "@mui/icons-material/ClearAll";
-import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import {
   AppBar,
   Box,
@@ -29,11 +29,15 @@ import { useNavigate } from "react-router-dom";
 import { useJupyterConnectivity } from "../jupyter/JupyterConnectivity";
 import PythonSessionClient from "../jupyter/PythonSessionClient";
 import { convertFromJupytext } from "../pages/HomePage/notebook/notebookFileOperations";
-import { ParsedUrlParams } from "../shared/util/indexedDb";
+import {
+  ParsedUrlParams,
+  saveNotebookToStorage,
+} from "../shared/util/indexedDb";
 import CloudSaveDialog from "./CloudSaveDialog";
 import DownloadOptionsDialog from "./DownloadOptionsDialog";
 import FileImportDialog from "./FileImportDialog";
 import LocalSaveDialog from "./LocalSaveDialog";
+import serializeNotebook from "../pages/HomePage/serializeNotebook";
 
 type ToolbarProps = {
   onSetNotebook: (
@@ -67,11 +71,10 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onUpdateGist,
   onSaveGist,
   notebook,
-  onSetNotebook,
-  onClearUrlParams,
   onJupyterConfigClick,
   onClearOutputs,
   onClearNotebook,
+  onSetNotebook,
 }) => {
   const navigate = useNavigate();
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
@@ -443,25 +446,42 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
       <FileImportDialog
         open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
-        onFileSelected={async (file) => {
+        onFileSelected={async (file, options) => {
           const content = await file.text();
+          let notebook: ImmutableNotebook;
+
           if (file.name.endsWith(".py")) {
             // Convert from jupytext
-            const notebook = convertFromJupytext(content);
-            onClearUrlParams();
-            onSetNotebook(notebook, { isTrusted: false });
+            notebook = convertFromJupytext(content);
           } else if (file.name.endsWith(".ipynb")) {
             // Parse as ipynb
             const notebookData = JSON.parse(content);
-            const notebook = fromJS(notebookData);
-            onClearUrlParams();
-            onSetNotebook(notebook, { isTrusted: false });
+            notebook = fromJS(notebookData);
+          } else {
+            return; // Unsupported file type
           }
-          // Clear URL params without reloading
-          onClearUrlParams();
+
+          if (options.replaceExisting) {
+            // If replacing existing, just set the notebook without saving to storage
+            onSetNotebook(notebook, { isTrusted: false });
+          } else {
+            // Otherwise prompt for name and save to storage
+            const name = prompt(
+              "Enter a name for the notebook",
+              localNameFromFileName(file.name),
+            );
+            if (!name) return;
+            await saveNotebookToStorage(
+              serializeNotebook(notebook),
+              null,
+              name,
+              false,
+            );
+            navigate(`?localname=${name}`);
+          }
         }}
-        onContentPasted={(jupytextOrIpynb) => {
-          // Convert from jupytext
+        onContentPasted={async (jupytextOrIpynb, options) => {
+          // Convert from jupytext or parse ipynb
           let notebook: ImmutableNotebook;
           try {
             // try to parse as json - then it's an ipynb
@@ -471,13 +491,32 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
             // otherwise we assume jupytext
             notebook = convertFromJupytext(jupytextOrIpynb);
           }
-          // Clear URL params first
-          onClearUrlParams();
-          onSetNotebook(notebook, { isTrusted: false });
+
+          if (options.replaceExisting) {
+            // If replacing existing, just set the notebook without saving to storage
+            onSetNotebook(notebook, { isTrusted: false });
+          } else {
+            // Otherwise prompt for name and save to storage
+            const name = prompt("Enter a name for the notebook", "default");
+            if (!name) return;
+            await saveNotebookToStorage(
+              serializeNotebook(notebook),
+              null,
+              name,
+              false,
+            );
+            navigate(`?localname=${name}`);
+          }
         }}
       />
     </AppBar>
   );
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const localNameFromFileName = (_fileName: string) => {
+  // for now we default to default
+  return "default";
 };
 
 export default Toolbar;

@@ -14,8 +14,11 @@ import { FunctionComponent, useCallback, useState } from "react";
 type FileImportDialogProps = {
   open: boolean;
   onClose: () => void;
-  onFileSelected: (file: File) => void;
-  onContentPasted: (content: string) => void;
+  onFileSelected: (file: File, options: { replaceExisting: boolean }) => void;
+  onContentPasted: (
+    content: string,
+    options: { replaceExisting: boolean },
+  ) => void;
 };
 
 const FileImportDialog: FunctionComponent<FileImportDialogProps> = ({
@@ -24,37 +27,38 @@ const FileImportDialog: FunctionComponent<FileImportDialogProps> = ({
   onFileSelected,
   onContentPasted,
 }) => {
+  const [replaceExisting, setReplaceExisting] = useState(false);
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       const file = e.dataTransfer.files[0];
       if (file && (file.name.endsWith(".py") || file.name.endsWith(".ipynb"))) {
-        onFileSelected(file);
+        onFileSelected(file, { replaceExisting: replaceExisting });
         onClose();
       }
     },
-    [onClose, onFileSelected],
+    [onClose, onFileSelected, replaceExisting],
   );
 
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file && (file.name.endsWith(".py") || file.name.endsWith(".ipynb"))) {
-        onFileSelected(file);
+        onFileSelected(file, { replaceExisting: replaceExisting });
         onClose();
       }
     },
-    [onClose, onFileSelected],
+    [onClose, onFileSelected, replaceExisting],
   );
 
   const [pastedContent, setPastedContent] = useState("");
 
   const handlePasteSubmit = useCallback(() => {
     if (pastedContent.trim()) {
-      onContentPasted(pastedContent);
+      onContentPasted(pastedContent, { replaceExisting: replaceExisting });
       onClose();
     }
-  }, [pastedContent, onContentPasted, onClose]);
+  }, [pastedContent, onContentPasted, onClose, replaceExisting]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -113,6 +117,17 @@ const FileImportDialog: FunctionComponent<FileImportDialogProps> = ({
           variant="outlined"
           size="small"
         />
+        <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
+          <input
+            type="checkbox"
+            id="replace-existing"
+            checked={replaceExisting}
+            onChange={(e) => setReplaceExisting(e.target.checked)}
+          />
+          <label htmlFor="replace-existing" style={{ marginLeft: "8px" }}>
+            Replace existing notebook
+          </label>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
