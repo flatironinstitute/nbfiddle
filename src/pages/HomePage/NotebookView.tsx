@@ -306,7 +306,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   // TODO: Implement clearing entire notebook
   const handleClearNotebook = useCallback(() => {
-    setNotebook(emptyNotebook, { isTrusted: true }); // clear the notebook and trust it
+    setNotebook(emptyNotebook, { isTrusted: undefined }); // we don't trust it because there's an undo option
     setActiveCellId(undefined);
   }, [setNotebook, setActiveCellId]);
 

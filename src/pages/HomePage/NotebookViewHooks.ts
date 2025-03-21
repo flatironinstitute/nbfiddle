@@ -110,7 +110,11 @@ export const useLoadRemoteNotebook = (
       const notebook0 =
         localModifiedNotebookReconstructed || reconstructedNotebook;
 
-      setNotebook(notebook0, { isTrusted: false });
+      setNotebook(notebook0, {
+        isTrusted: localModifiedNotebookReconstructed
+          ? x?.metadata.isTrusted
+          : false,
+      });
       if (notebook0.cellOrder.size > 0) {
         setActiveCellId(notebook0.cellOrder.first());
       }
