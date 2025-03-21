@@ -525,6 +525,37 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               </button>
             </div>
             <div>&nbsp;</div>
+            {notebook.cellOrder.size === 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "40px 20px",
+                  marginTop: "20px",
+                }}
+              >
+                <h2 style={{ marginBottom: "20px", color: "#1976d2" }}>
+                  Welcome to nbfiddle!
+                </h2>
+                <p style={{ fontSize: "16px", marginBottom: "20px" }}>
+                  Get started by exploring our welcome notebook
+                </p>
+                <a
+                  href="https://nbfiddle.app/?url=https://gist.github.com/magland/c5b5c777c093d8c8e9eb89857a52eb7b%23file-nbfiddle-welcome-ipynb"
+                  style={{
+                    display: "inline-block",
+                    padding: "12px 24px",
+                    backgroundColor: "#1976d2",
+                    color: "white",
+                    textDecoration: "none",
+                    borderRadius: "4px",
+                    marginBottom: "20px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  View Welcome Notebook
+                </a>
+              </div>
+            )}
             <div>&nbsp;</div>
           </Paper>
         </div>
