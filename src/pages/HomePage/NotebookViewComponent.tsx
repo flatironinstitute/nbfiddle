@@ -248,6 +248,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                     padding: 8,
                     marginBottom: 8,
                     position: "relative",
+                    backgroundColor:
+                      hoveredCellId === cellId ? "#fafafa" : "transparent",
+                    transition: "background-color 0.15s ease-in-out",
                   }}
                   onMouseEnter={() => setHoveredCellId(cellId)}
                   onMouseLeave={() => setHoveredCellId(null)}
