@@ -220,6 +220,10 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               } else if (event.key === "b" && activeCellId) {
                 onAddCellAfterCell(activeCellId);
               } else if (event.key === "x" && activeCellId) {
+                const okayToDelete = window.confirm(
+                  "Are you sure you want to delete this cell?",
+                );
+                if (!okayToDelete) return;
                 onDeleteCell(activeCellId);
               } else if (event.key === "d" && activeCellId) {
                 handleLogCell(activeCellId);
