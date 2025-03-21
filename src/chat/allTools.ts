@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as executePythonCode from "./tools/executePythonCode";
+import * as replaceActiveCell from "./tools/replaceActiveCell";
 
 import { ORFunctionDescription } from "../pages/HomePage/openRouterTypes";
 
@@ -13,7 +14,7 @@ interface NCTool {
   requiresPermission: boolean;
 }
 
-const staticTools: NCTool[] = [executePythonCode];
+const staticTools: NCTool[] = [executePythonCode, replaceActiveCell];
 
 export const getAllTools = async () => {
   return [...staticTools] as const;

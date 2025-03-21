@@ -31,10 +31,8 @@ type NotebookViewComponentProps = {
   currentCellExecution: ExecutionState;
   onRestartSession: () => void;
   sessionClient: PythonSessionClient | null;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
   onClearOutputs: () => void;
   onClearNotebook: () => void;
   onCancel: () => void;
@@ -56,7 +54,10 @@ type NotebookViewComponentProps = {
   onDeleteCell: (cellId: string) => void;
   activeCellId: string | undefined;
   setActiveCellId: (id: string | undefined) => void;
-  setNotebook: (n: ImmutableNotebook, o: { isTrusted?: boolean }) => void;
+  setNotebook: (
+    n: ImmutableNotebook,
+    o: { isTrusted: boolean | undefined },
+  ) => void;
   cellIdRequiringFocus: string | null;
   setCellIdRequiringFocus: (id: string | null) => void;
   notebookIsTrusted: boolean;
@@ -97,8 +98,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   notebookIsTrusted,
   onUndo,
   onRedo,
-  canUndo,
-  canRedo,
 }) => {
   const isMobile = width <= 800;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
@@ -178,8 +177,6 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           onClearNotebook={onClearNotebook}
           onUndo={onUndo}
           onRedo={onRedo}
-          canUndo={canUndo}
-          canRedo={canRedo}
         />
       </div>
       <ScrollY
@@ -248,9 +245,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               } else if (event.key === "End") {
                 setActiveCellId(notebook.cellOrder.last());
               } else if (event.key === "z" && event.ctrlKey) {
-                onUndo();
+                if (onUndo) onUndo();
               } else if (event.key === "y" && event.ctrlKey) {
-                onRedo();
+                if (onRedo) onRedo();
               }
             }}
           >

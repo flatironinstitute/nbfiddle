@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import { Tabs, Tab, Box } from "@mui/material";
 import NotebookView from "./NotebookView";
 import JupyterConfigurationView from "../../jupyter/JupyterConfigurationView";
@@ -11,6 +11,11 @@ import { JupyterConnectivityProvider } from "../../jupyter/JupyterConnectivityPr
 import { useLocation } from "react-router-dom";
 import HorizontalSplitter from "@components/HorizontalSplitter";
 import ChatInterface from "../../chat/ChatInterface";
+import {
+  emptyNotebook,
+  ImmutableCell,
+  ImmutableNotebook,
+} from "@nteract/commutable";
 
 type HomePageProps = { width: number; height: number };
 
@@ -75,6 +80,16 @@ const getNotebookParamsFromUrlSearch = (urlSearch: string): NotebookParams => {
   return { parsedUrlParams, localname };
 };
 
+type NotebookHistoryState = {
+  historyIndex: number;
+  notebookHistory: ImmutableNotebook[];
+};
+
+const defaultNotebookHistoryState: NotebookHistoryState = {
+  historyIndex: -1,
+  notebookHistory: [],
+};
+
 const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [notebookParams, setNotebookParams] = useState<
@@ -91,6 +106,75 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
 
   const location = useLocation();
   const urlSearch = location.search;
+
+  const [notebook, setNotebook0] = useState<ImmutableNotebook>(emptyNotebook);
+  const [notebookIsTrusted, setNotebookIsTrusted] = useState(true);
+  const [notebookHistory, setNotebookHistory] = useState<NotebookHistoryState>(
+    defaultNotebookHistoryState,
+  );
+
+  // reset the history if parsedUrlParams or localname changes
+  useEffect(() => {
+    setNotebookHistory(defaultNotebookHistoryState);
+  }, [notebookParams]);
+
+  const setNotebook = useCallback(
+    (notebook: ImmutableNotebook, o: { isTrusted?: boolean }) => {
+      setNotebook0(notebook);
+      if (o.isTrusted !== undefined) {
+        setNotebookIsTrusted(o.isTrusted);
+      }
+      // Add new state to history, removing any future states if we're not at the end
+      setNotebookHistory((prev) => {
+        let newHistory = prev.notebookHistory.slice(0, prev.historyIndex + 1);
+        newHistory.push(notebook);
+        // we want a maximum of 30 notebook states in the history
+        // (don't worry, the data are note duplicated, it's largerly references)
+        if (newHistory.length > 30) {
+          newHistory = newHistory.slice(-30);
+        }
+        return {
+          historyIndex: newHistory.length - 1,
+          notebookHistory: newHistory,
+        };
+      });
+    },
+    [],
+  );
+
+  const handleUndo = useCallback(() => {
+    setNotebookHistory((prev) => {
+      if (prev.historyIndex - 1 >= 0) {
+        setNotebook0(prev.notebookHistory[prev.historyIndex - 1]);
+        return {
+          historyIndex: prev.historyIndex - 1,
+          notebookHistory: prev.notebookHistory,
+        };
+      }
+      return prev;
+    });
+  }, [setNotebook0]);
+
+  const handleRedo = useCallback(() => {
+    setNotebookHistory((prev) => {
+      if (prev.historyIndex + 1 < prev.notebookHistory.length) {
+        setNotebook0(prev.notebookHistory[prev.historyIndex + 1]);
+        return {
+          historyIndex: prev.historyIndex + 1,
+          notebookHistory: prev.notebookHistory,
+        };
+      }
+      return prev;
+    });
+  }, []);
+
+  const [activeCellId, setActiveCellId] = useState<string | undefined>(
+    undefined,
+  );
+
+  const canUndo = notebookHistory.historyIndex > 0;
+  const canRedo =
+    notebookHistory.historyIndex < notebookHistory.notebookHistory.length - 1;
 
   // Initialize notebook params from URL
   useEffect(() => {
@@ -116,6 +200,23 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
     window.addEventListener("popstate", handleUrlChange);
     return () => window.removeEventListener("popstate", handleUrlChange);
   }, [urlSearch]);
+
+  const handleReplaceActiveCell = (content: string) => {
+    if (!activeCellId) return;
+    const c = notebook.cellMap.get(activeCellId);
+    if (!c) return;
+    let c2: ImmutableCell;
+    if (c.cell_type === "code") {
+      c2 = c.set("source", content);
+    } else if (c.cell_type === "markdown") {
+      c2 = c.set("source", content);
+    } else {
+      return;
+    }
+    setNotebook(notebook.setIn(["cellMap", activeCellId], c2), {
+      isTrusted: undefined,
+    });
+  };
 
   if (urlParseError) {
     return (
@@ -187,7 +288,11 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
             initialSplitterPosition={Math.min(350, width / 3)}
             hideFirstChild={!chatEnabled}
           >
-            <ChatInterface width={0} height={0} />
+            <ChatInterface
+              width={0}
+              height={0}
+              onReplaceActiveCell={handleReplaceActiveCell}
+            />
             <NotebookView
               width={0}
               height={0}
@@ -195,6 +300,13 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
               localname={notebookParams.localname}
               onJupyterConfigClick={() => setSelectedTab(1)}
               fullWidthEnabled={fullWidthEnabled}
+              notebook={notebook}
+              setNotebook={setNotebook}
+              notebookIsTrusted={notebookIsTrusted}
+              onUndo={canUndo ? handleUndo : undefined}
+              onRedo={canRedo ? handleRedo : undefined}
+              activeCellId={activeCellId}
+              setActiveCellId={setActiveCellId}
             />
           </HorizontalSplitter>
         </Box>

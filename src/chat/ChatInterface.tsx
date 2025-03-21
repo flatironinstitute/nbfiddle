@@ -14,11 +14,13 @@ import { globalOutputItems } from "./tools/executePythonCode";
 type ChatInterfaceProps = {
   width: number;
   height: number;
+  onReplaceActiveCell: (content: string) => void;
 };
 
 const ChatInterface: FunctionComponent<ChatInterfaceProps> = ({
   width,
   height,
+  onReplaceActiveCell,
 }) => {
   const [selectedModel, setSelectedModel] = useState(
     "google/gemini-2.0-flash-001",
@@ -87,6 +89,7 @@ const ChatInterface: FunctionComponent<ChatInterfaceProps> = ({
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
           },
+          replaceActiveCell: onReplaceActiveCell,
         },
       );
       setPendingMessages(undefined);

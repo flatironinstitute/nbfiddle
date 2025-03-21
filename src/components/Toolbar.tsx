@@ -60,10 +60,8 @@ type ToolbarProps = {
   onUpdateGist: (token: string) => Promise<void>;
   onSaveGist: (token: string, fileName: string) => Promise<string>;
   notebook: ImmutableNotebook;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 };
 
 const useElementWidth = (ref: React.RefObject<HTMLElement>) => {
@@ -105,8 +103,6 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
   onSetNotebook,
   onUndo,
   onRedo,
-  canUndo,
-  canRedo,
 }) => {
   const navigate = useNavigate();
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
@@ -257,8 +253,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                   <IconButton
                     size="small"
                     color="primary"
-                    onClick={() => onUndo()}
-                    disabled={!canUndo}
+                    onClick={onUndo}
+                    disabled={!onUndo}
                   >
                     <UndoIcon />
                   </IconButton>
@@ -269,8 +265,8 @@ const Toolbar: FunctionComponent<ToolbarProps> = ({
                   <IconButton
                     size="small"
                     color="primary"
-                    onClick={() => onRedo()}
-                    disabled={!canRedo}
+                    onClick={onRedo}
+                    disabled={!onRedo}
                   >
                     <RedoIcon />
                   </IconButton>
