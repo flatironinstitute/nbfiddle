@@ -540,7 +540,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               </button>
             </div>
             <div>&nbsp;</div>
-            {notebook.cellOrder.size === 0 && (
+            {notebook.cellOrder.size === 0 && (!parsedUrlParams) && (
               <div
                 style={{
                   textAlign: "center",
