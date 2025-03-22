@@ -307,6 +307,16 @@ export async function loadNotebookFromStorage(
           return;
         }
 
+        if (
+          parsedUrlParams &&
+          (notebook.cells.size === 0 || notebook.cells.size === undefined)
+        ) {
+          // If loading from a URL, and the notebook is empty, return null
+          // did this because there was a glitchy case on my phone
+          resolve(null);
+          return;
+        }
+
         // Return notebook and metadata separately
         resolve({
           notebook,

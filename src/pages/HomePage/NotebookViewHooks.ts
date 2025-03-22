@@ -104,12 +104,7 @@ export const useLoadRemoteNotebook = (
       setRemoteNotebook(reconstructedNotebook);
       setRemoteNotebookFilePath(notebookFilePath);
       const x = await loadNotebookFromStorage(parsedUrlParams, localname);
-      let localModifiedNotebook = x?.notebook;
-      if (localModifiedNotebook.cells.size === 0) {
-        // in the case of an empty notebook locally, let's load the remote notebook
-        // (did this because there was some glitchy cases on my phone)
-        localModifiedNotebook = null;
-      }
+      const localModifiedNotebook = x?.notebook;
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
         localModifiedNotebook ? fromJS(localModifiedNotebook) : null;
       const notebook0 =
