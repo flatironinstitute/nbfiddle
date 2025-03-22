@@ -24,7 +24,7 @@ const ChatInterface: FunctionComponent<ChatInterfaceProps> = ({
 }) => {
   const [selectedModel, setSelectedModel] = useState(
     // "google/gemini-2.0-flash-001",
-    "anthropic/claude-3.5-sonnet"
+    "anthropic/claude-3.5-sonnet",
   );
   const [messages, setMessages] = useState<ORMessage[]>([]);
   const [pendingMessages, setPendingMessages] = useState<
