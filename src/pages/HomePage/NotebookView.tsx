@@ -272,6 +272,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       onUpdateGist={handleUpdateGist}
       notebook={notebook}
       parsedUrlParams={parsedUrlParams}
+      localname={localname}
       hasLocalChanges={hasLocalChanges}
       resetToRemoteVersion={resetToRemoteVersion}
       onDownload={handleDownload}
