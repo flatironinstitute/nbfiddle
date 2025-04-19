@@ -1,4 +1,5 @@
 import CodeCellView from "@components/CodeCellView";
+import CellNotes from "@components/CellNotes";
 import getGlobalEnterPressManager from "@components/globalEnterPressManager";
 import MarkdownCellView from "@components/MarkdownCellView";
 import ScrollY from "@components/ScrollY";
@@ -7,6 +8,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CodeIcon from "@mui/icons-material/Code";
 import DeleteIcon from "@mui/icons-material/Delete";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import { Alert, IconButton, Paper } from "@mui/material";
 import {
@@ -21,6 +23,7 @@ import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import PythonSessionClient from "../../jupyter/PythonSessionClient";
 import { ParsedUrlParams } from "../../shared/util/indexedDb";
 import { ExecutionState } from "./notebook/notebook-execution";
+import { CellNote } from "../../types/CellNote";
 
 type NotebookViewComponentProps = {
   width: number;
@@ -103,6 +106,64 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
 }) => {
   const isMobile = width <= 800;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
+  const [isAddingNote, setIsAddingNote] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<string>(() => {
+    return localStorage.getItem("nbfiddle_note_user") || "User";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("nbfiddle_note_user", currentUser);
+  }, [currentUser]);
+
+  const handleAddNote = useCallback(
+    (cellId: string, note: CellNote) => {
+      const cell = notebook.cellMap.get(cellId);
+      if (!cell) return;
+
+      // Get existing notes or initialize empty array
+      const existingNotes = cell.metadata.get("nbfiddle_notes") || [];
+      const newNotes = [...existingNotes, note];
+
+      // Update cell metadata with new notes
+      const newCell = cell.setIn(["metadata", "nbfiddle_notes"], newNotes);
+      const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
+      setNotebook(newNotebook, { isTrusted: undefined });
+    },
+    [notebook, setNotebook],
+  );
+
+  const handleDeleteNote = useCallback(
+    (cellId: string, index: number) => {
+      const cell = notebook.cellMap.get(cellId);
+      if (!cell) return;
+
+      const existingNotes = cell.metadata.get("nbfiddle_notes") || [];
+      const newNotes = existingNotes.filter(
+        (_: CellNote, i: number) => i !== index,
+      );
+
+      const newCell = cell.setIn(["metadata", "nbfiddle_notes"], newNotes);
+      const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
+      setNotebook(newNotebook, { isTrusted: undefined });
+    },
+    [notebook, setNotebook],
+  );
+
+  const handleEditNote = useCallback(
+    (cellId: string, index: number, note: CellNote) => {
+      const cell = notebook.cellMap.get(cellId);
+      if (!cell) return;
+
+      const existingNotes = cell.metadata.get("nbfiddle_notes") || [];
+      const newNotes = [...existingNotes];
+      newNotes[index] = note;
+
+      const newCell = cell.setIn(["metadata", "nbfiddle_notes"], newNotes);
+      const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
+      setNotebook(newNotebook, { isTrusted: undefined });
+    },
+    [notebook, setNotebook],
+  );
 
   const [markdownCellIdsBeingEdited, setMarkdownCellIdsBeingEdited] = useState<
     Set<string>
@@ -334,6 +395,16 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setIsAddingNote(cellId);
+                        }}
+                        title="Add note"
+                      >
+                        <NoteAddIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           onDeleteCell(cellId);
                         }}
                         title="Delete cell"
@@ -478,6 +549,24 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       )}
                     </div>
                   </div>
+                  {((cell.metadata.get("nbfiddle_notes") || []).length > 0 ||
+                    isAddingNote === cellId) && (
+                    <CellNotes
+                      notes={cell.metadata.get("nbfiddle_notes") || []}
+                      isAdding={isAddingNote === cellId}
+                      onAddNote={(note) => {
+                        handleAddNote(cellId, note);
+                        setIsAddingNote(null);
+                      }}
+                      onEditNote={(index, note) =>
+                        handleEditNote(cellId, index, note)
+                      }
+                      onDeleteNote={(index) => handleDeleteNote(cellId, index)}
+                      onCancel={() => setIsAddingNote(null)}
+                      currentUser={currentUser}
+                      onUserChange={setCurrentUser}
+                    />
+                  )}
                 </div>
               );
             })}
