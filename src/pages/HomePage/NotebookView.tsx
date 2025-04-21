@@ -55,8 +55,22 @@ import { NotebookV4 } from "@nteract/commutable/lib/v4";
 // Custom debounced postMessage mechanism
 let notebookToPost: string | null = null;
 let notebookPostScheduled = false;
-function postNotebookToParentDebounced(content: NotebookV4): void {
+function postNotebookToParentDebounced(
+  content: NotebookV4,
+  o: { sendImmediately: boolean },
+): void {
   notebookToPost = JSON.stringify(content);
+  if (o.sendImmediately) {
+    window.parent.postMessage(
+      {
+        type: "notebookContent",
+        content: notebookToPost,
+      },
+      "*",
+    );
+    notebookPostScheduled = false;
+    return;
+  }
   if (!notebookPostScheduled) {
     notebookPostScheduled = true;
     setTimeout(() => {
@@ -176,9 +190,38 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     );
 
     if (embedded) {
-      postNotebookToParentDebounced(serializedNotebook);
+      postNotebookToParentDebounced(serializedNotebook, {
+        sendImmediately: false,
+      });
     }
   }, [notebook, parsedUrlParams, localname, notebookIsTrusted, embedded]);
+
+  // Handle incoming messages from parent when embedded
+  useEffect(() => {
+    if (!embedded) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (data.type === "updateNotebook") {
+        try {
+          const notebookData = JSON.parse(data.content);
+          const immutableNotebook = fromJS(notebookData);
+          setNotebook(immutableNotebook, { isTrusted: notebookIsTrusted });
+          // send it back immediately
+          postNotebookToParentDebounced(serializeNotebook(immutableNotebook), {
+            sendImmediately: true,
+          });
+        } catch (error) {
+          console.error("Error parsing notebook data from parent:", error);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [embedded, setNotebook, notebookIsTrusted]);
 
   // set the AI context
   useEffect(() => {
