@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 import serializeNotebook from "../pages/HomePage/serializeNotebook";
+import { track } from "@vercel/analytics";
 
 type SaveOption = "update-gist" | "new-gist";
 
@@ -82,9 +83,11 @@ const CloudSaveDialog: FunctionComponent<CloudSaveDialogProps> = ({
     try {
       if (saveOption === "new-gist") {
         const fileUri = await onSaveGist(gitHubToken, fileName);
+        track("saved_to_gist", {});
         setNewGistFileUri(fileUri);
       } else {
         await onUpdateGist(gitHubToken);
+        track("updated_gist", {});
         onClose();
       }
     } catch (err) {
