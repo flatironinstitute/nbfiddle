@@ -50,6 +50,30 @@ import {
   setGlobalNotebookContent,
 } from "../../chat/sendChatMessage";
 
+import { NotebookV4 } from "@nteract/commutable/lib/v4";
+
+// Custom debounced postMessage mechanism
+let notebookToPost: string | null = null;
+let notebookPostScheduled = false;
+function postNotebookToParentDebounced(content: NotebookV4): void {
+  notebookToPost = JSON.stringify(content);
+  if (!notebookPostScheduled) {
+    notebookPostScheduled = true;
+    setTimeout(() => {
+      if (notebookToPost !== null) {
+        window.parent.postMessage(
+          {
+            type: "notebookContent",
+            content: notebookToPost,
+          },
+          "*",
+        );
+      }
+      notebookPostScheduled = false;
+    }, 1000);
+  }
+}
+
 setCodeCompletionsEnabled(
   localStorage.getItem("codeCompletionsEnabled") === "1",
 );
@@ -59,6 +83,7 @@ type NotebookViewProps = {
   height: number;
   parsedUrlParams: ParsedUrlParams | null;
   localname?: string;
+  embedded: boolean;
   onJupyterConfigClick?: () => void;
   fullWidthEnabled: boolean;
   notebook: ImmutableNotebook;
@@ -78,6 +103,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   height,
   parsedUrlParams,
   localname,
+  embedded,
   onJupyterConfigClick,
   fullWidthEnabled,
   notebook,
@@ -139,15 +165,20 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     setActiveCellId,
   );
 
-  // Save notebook on changes with debouncing
+  // Save notebook on changes with debouncing and send to parent if embedded
   useEffect(() => {
+    const serializedNotebook = serializeNotebook(notebook);
     saveNotebookToStorageDebounced(
-      serializeNotebook(notebook),
+      serializedNotebook,
       parsedUrlParams,
       localname,
       notebookIsTrusted,
     );
-  }, [notebook, parsedUrlParams, localname, notebookIsTrusted]);
+
+    if (embedded) {
+      postNotebookToParentDebounced(serializedNotebook);
+    }
+  }, [notebook, parsedUrlParams, localname, notebookIsTrusted, embedded]);
 
   // set the AI context
   useEffect(() => {

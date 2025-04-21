@@ -22,12 +22,14 @@ type HomePageProps = { width: number; height: number };
 interface NotebookParams {
   parsedUrlParams: ParsedUrlParams | null;
   localname: string | undefined;
+  embedded: boolean;
 }
 
 const getNotebookParamsFromUrlSearch = (urlSearch: string): NotebookParams => {
   const params = new URLSearchParams(urlSearch);
   const localname = params.get("localname") || undefined;
   const url = params.get("url") || undefined;
+  const embedded = params.get("embedded") === "1";
 
   let parsedUrlParams: ParsedUrlParams | null = null;
   if (url) {
@@ -77,7 +79,7 @@ const getNotebookParamsFromUrlSearch = (urlSearch: string): NotebookParams => {
     }
   }
 
-  return { parsedUrlParams, localname };
+  return { parsedUrlParams, localname, embedded };
 };
 
 type NotebookHistoryState = {
@@ -298,6 +300,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
               height={0}
               parsedUrlParams={notebookParams.parsedUrlParams}
               localname={notebookParams.localname}
+              embedded={notebookParams.embedded}
               onJupyterConfigClick={() => setSelectedTab(1)}
               fullWidthEnabled={fullWidthEnabled}
               notebook={notebook}
