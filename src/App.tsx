@@ -52,6 +52,7 @@ const AppContent = () => {
   const { width, height } = useWindowDimensions();
   let hideAppBar = searchParams.get("embedded") === "1";
   const renderOnly = searchParams.get("renderonly") === "1";
+  const enforceFullWidth = searchParams.get("fullwidth") === "1";
 
   // for now let's always hide the app bar
   // because it's not used for anything
@@ -62,7 +63,14 @@ const AppContent = () => {
   const mainHeight = height - appBarHeight;
 
   if (renderOnly) {
-    return <HomePage width={width} height={mainHeight} renderOnly={true} />;
+    return (
+      <HomePage
+        width={width}
+        height={mainHeight}
+        renderOnly={true}
+        enforceFullWidth={enforceFullWidth}
+      />
+    );
   }
 
   return (
@@ -134,7 +142,13 @@ const AppContent = () => {
         <Routes>
           <Route
             path="/"
-            element={<HomePage width={width} height={mainHeight} />}
+            element={
+              <HomePage
+                width={width}
+                height={mainHeight}
+                enforceFullWidth={enforceFullWidth}
+              />
+            }
           />
           <Route
             path="/settings"

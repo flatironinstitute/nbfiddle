@@ -17,7 +17,12 @@ import {
   ImmutableNotebook,
 } from "@nteract/commutable";
 
-type HomePageProps = { width: number; height: number; renderOnly?: boolean };
+type HomePageProps = {
+  width: number;
+  height: number;
+  renderOnly?: boolean;
+  enforceFullWidth?: boolean;
+};
 
 interface NotebookParams {
   parsedUrlParams: ParsedUrlParams | null;
@@ -96,6 +101,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({
   width,
   height,
   renderOnly,
+  enforceFullWidth,
 }) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [notebookParams, setNotebookParams] = useState<
@@ -312,7 +318,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({
               localname={notebookParams.localname}
               embedded={notebookParams.embedded}
               onJupyterConfigClick={() => setSelectedTab(1)}
-              fullWidthEnabled={fullWidthEnabled}
+              fullWidthEnabled={fullWidthEnabled || !!enforceFullWidth}
               notebook={notebook}
               setNotebook={setNotebook}
               notebookIsTrusted={notebookIsTrusted}
