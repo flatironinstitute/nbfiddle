@@ -65,6 +65,7 @@ type NotebookViewComponentProps = {
   cellIdRequiringFocus: string | null;
   setCellIdRequiringFocus: (id: string | null) => void;
   notebookIsTrusted: boolean;
+  renderOnly?: boolean;
 };
 
 const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
@@ -103,13 +104,17 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   notebookIsTrusted,
   onUndo,
   onRedo,
+  renderOnly,
 }) => {
   const isMobile = width <= 800;
+  const readOnly = renderOnly;
   const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
   const [isAddingNote, setIsAddingNote] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<string>(() => {
     return localStorage.getItem("nbfiddle_note_user") || "User";
   });
+
+  const showCellNumbers = renderOnly;
 
   useEffect(() => {
     localStorage.setItem("nbfiddle_note_user", currentUser);
@@ -117,6 +122,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
 
   const handleAddNote = useCallback(
     (cellId: string, note: CellNote) => {
+      if (readOnly) return;
       const cell = notebook.cellMap.get(cellId);
       if (!cell) return;
 
@@ -124,16 +130,17 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
       const existingNotes = cell.metadata.get("nbfiddle_notes") || [];
       const newNotes = [...existingNotes, note];
 
-      // Update cell metadata with new notes
+      // Update cell metadata withnbfiddle-logo new notes
       const newCell = cell.setIn(["metadata", "nbfiddle_notes"], newNotes);
       const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
       setNotebook(newNotebook, { isTrusted: undefined });
     },
-    [notebook, setNotebook],
+    [notebook, setNotebook, readOnly],
   );
 
   const handleDeleteNote = useCallback(
     (cellId: string, index: number) => {
+      if (readOnly) return;
       const cell = notebook.cellMap.get(cellId);
       if (!cell) return;
 
@@ -146,11 +153,12 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
       const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
       setNotebook(newNotebook, { isTrusted: undefined });
     },
-    [notebook, setNotebook],
+    [notebook, setNotebook, readOnly],
   );
 
   const handleEditNote = useCallback(
     (cellId: string, index: number, note: CellNote) => {
+      if (readOnly) return;
       const cell = notebook.cellMap.get(cellId);
       if (!cell) return;
 
@@ -162,7 +170,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
       const newNotebook = notebook.setIn(["cellMap", cellId], newCell);
       setNotebook(newNotebook, { isTrusted: undefined });
     },
-    [notebook, setNotebook],
+    [notebook, setNotebook, readOnly],
   );
 
   const [markdownCellIdsBeingEdited, setMarkdownCellIdsBeingEdited] = useState<
@@ -170,18 +178,20 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   >(new Set());
 
   const onShiftEnter = useCallback(() => {
+    if (readOnly) return;
     setMarkdownCellIdsBeingEdited(
       (x) => new Set([...x].filter((a) => a !== activeCellId)),
     );
     onExecute({ advance: true });
-  }, [onExecute, activeCellId]);
+  }, [onExecute, activeCellId, readOnly]);
 
   const onCtrlEnter = useCallback(() => {
+    if (readOnly) return;
     setMarkdownCellIdsBeingEdited(
       (x) => new Set([...x].filter((a) => a !== activeCellId)),
     );
     onExecute({ advance: false });
-  }, [onExecute, activeCellId]);
+  }, [onExecute, activeCellId, readOnly]);
 
   useEffect(() => {
     getGlobalEnterPressManager().registerShiftEnterCallback(onShiftEnter);
@@ -208,6 +218,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
   const maxWidth = fullWidthEnabled ? 99999 : 1200;
   const notebookWidth = Math.min(width - horizontalMargin * 2, maxWidth) - 15; // - 15 to leave room for the scrollbar
   const leftPadding = Math.max((width - notebookWidth) / 2, horizontalMargin);
+  const mainHeight = renderOnly ? height : height - 70;
   return (
     <>
       {loadError && (
@@ -215,36 +226,38 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
           {loadError}
         </Alert>
       )}
-      <div
-        style={{
-          position: "relative",
-          left: leftPadding,
-          width: notebookWidth,
-        }}
-      >
-        <Toolbar
-          executingCellId={currentCellExecution.executingCellId}
-          onRestartSession={onRestartSession}
-          sessionClient={sessionClient}
-          onCancel={onCancel}
-          parsedUrlParams={parsedUrlParams}
-          hasLocalChanges={hasLocalChanges}
-          onResetToRemote={resetToRemoteVersion}
-          onUpdateGist={onUpdateGist}
-          onSaveGist={onSaveGist}
-          notebook={notebook}
-          onSetNotebook={setNotebook}
-          onClearUrlParams={onClearUrlParams}
-          onJupyterConfigClick={onJupyterConfigClick}
-          onClearOutputs={onClearOutputs}
-          onClearNotebook={onClearNotebook}
-          onUndo={onUndo}
-          onRedo={onRedo}
-        />
-      </div>
+      {!renderOnly && (
+        <div
+          style={{
+            position: "relative",
+            left: leftPadding,
+            width: notebookWidth,
+          }}
+        >
+          <Toolbar
+            executingCellId={currentCellExecution.executingCellId}
+            onRestartSession={onRestartSession}
+            sessionClient={sessionClient}
+            onCancel={onCancel}
+            parsedUrlParams={parsedUrlParams}
+            hasLocalChanges={hasLocalChanges}
+            onResetToRemote={resetToRemoteVersion}
+            onUpdateGist={onUpdateGist}
+            onSaveGist={onSaveGist}
+            notebook={notebook}
+            onSetNotebook={setNotebook}
+            onClearUrlParams={onClearUrlParams}
+            onJupyterConfigClick={onJupyterConfigClick}
+            onClearOutputs={onClearOutputs}
+            onClearNotebook={onClearNotebook}
+            onUndo={onUndo}
+            onRedo={onRedo}
+          />
+        </div>
+      )}
       <ScrollY
         width={width}
-        height={height - 70}
+        height={mainHeight}
         dataTestId="notebook-scroll-container"
       >
         <div style={{ padding: `8px ${leftPadding}px` }}>
@@ -262,6 +275,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
             tabIndex={0}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
+                if (readOnly) return;
                 if (event.shiftKey) {
                   if (
                     activeCellId &&
@@ -290,10 +304,13 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                 onGoToNextCell();
                 event.preventDefault();
               } else if (event.key === "a" && !event.ctrlKey && activeCellId) {
+                if (readOnly) return;
                 onAddCellBeforeCell(activeCellId);
               } else if (event.key === "b" && !event.ctrlKey && activeCellId) {
+                if (readOnly) return;
                 onAddCellAfterCell(activeCellId);
               } else if (event.key === "x" && !event.ctrlKey && activeCellId) {
+                if (readOnly) return;
                 const okayToDelete = window.confirm(
                   "Are you sure you want to delete this cell?",
                 );
@@ -308,13 +325,15 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
               } else if (event.key === "End") {
                 setActiveCellId(notebook.cellOrder.last());
               } else if (event.key === "z" && event.ctrlKey) {
+                if (readOnly) return;
                 if (onUndo) onUndo();
               } else if (event.key === "y" && event.ctrlKey) {
+                if (readOnly) return;
                 if (onRedo) onRedo();
               }
             }}
           >
-            {notebook.cellOrder.map((cellId: string) => {
+            {notebook.cellOrder.map((cellId: string, cellIndex: number) => {
               const cell = notebook.cellMap.get(cellId);
               if (!cell) return null;
               return (
@@ -353,64 +372,74 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                         zIndex: 100,
                       }}
                     >
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddCellBeforeCell(cellId);
-                        }}
-                        title="Insert cell before"
-                      >
-                        <AddCircleIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddCellAfterCell(cellId);
-                        }}
-                        title="Insert cell after"
-                      >
-                        <AddCircleOutlineIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleCellType(cellId || "");
-                        }}
-                        title={
-                          cell.cell_type === "code"
-                            ? "Convert to Markdown"
-                            : "Convert to Code"
-                        }
-                      >
-                        {cell.cell_type === "markdown" ? (
-                          <TextSnippetIcon fontSize="small" />
-                        ) : (
-                          <CodeIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsAddingNote(cellId);
-                        }}
-                        title="Add note"
-                      >
-                        <NoteAddIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteCell(cellId);
-                        }}
-                        title="Delete cell"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      {!readOnly && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddCellBeforeCell(cellId);
+                          }}
+                          title="Insert cell before"
+                        >
+                          <AddCircleIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {!readOnly && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddCellAfterCell(cellId);
+                          }}
+                          title="Insert cell after"
+                        >
+                          <AddCircleOutlineIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {!readOnly && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleCellType(cellId || "");
+                          }}
+                          title={
+                            cell.cell_type === "code"
+                              ? "Convert to Markdown"
+                              : "Convert to Code"
+                          }
+                        >
+                          {cell.cell_type === "markdown" ? (
+                            <TextSnippetIcon fontSize="small" />
+                          ) : (
+                            <CodeIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      )}
+                      {!readOnly && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsAddingNote(cellId);
+                          }}
+                          title="Add note"
+                        >
+                          <NoteAddIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {!readOnly && (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteCell(cellId);
+                          }}
+                          title="Delete cell"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
                     </div>
                   )}
                   <div
@@ -435,16 +464,22 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                           marginBottom: "4px",
                         }}
                       >
-                        {currentCellExecution.executingCellId === cellId
-                          ? "[*]:"
-                          : currentCellExecution.cellExecutionCounts[cellId]
-                            ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
-                            : " "}
+                        {!readOnly
+                          ? currentCellExecution.executingCellId === cellId
+                            ? "[*]:"
+                            : currentCellExecution.cellExecutionCounts[cellId]
+                              ? `[${currentCellExecution.cellExecutionCounts[cellId]}]:`
+                              : " "
+                          : showCellNumbers
+                            ? `${cellIndex + 1}`
+                            : ""}
                       </div>
                       {cellId === activeCellId &&
-                      (cell.cell_type === "markdown" || sessionClient) ? (
+                      (cell.cell_type === "markdown" || sessionClient) &&
+                      !readOnly ? (
                         <button
                           onClick={(e) => {
+                            if (readOnly) return;
                             e.stopPropagation();
                             if (cell.cell_type === "markdown") {
                               setMarkdownCellIdsBeingEdited(
@@ -471,7 +506,8 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       ) : null}
                       {cellId === activeCellId &&
                       cell.cell_type === "code" &&
-                      !sessionClient ? (
+                      !sessionClient &&
+                      !readOnly ? (
                         <div
                           style={{
                             color: "#944",
@@ -524,6 +560,7 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                             );
                             setNotebook(newNotebook, { isTrusted: undefined });
                           }}
+                          readOnly={readOnly}
                         />
                       ) : cell.cell_type === "markdown" ? (
                         <MarkdownCellView
@@ -537,7 +574,9 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                             );
                             setNotebook(newNotebook, { isTrusted: undefined });
                           }}
-                          isEditing={markdownCellIdsBeingEdited.has(cellId)}
+                          isEditing={
+                            markdownCellIdsBeingEdited.has(cellId) && !readOnly
+                          }
                           onStartEditing={() => {
                             setMarkdownCellIdsBeingEdited(
                               (x) => new Set([...x, cellId]),
@@ -565,73 +604,77 @@ const NotebookViewComponent: FunctionComponent<NotebookViewComponentProps> = ({
                       onCancel={() => setIsAddingNote(null)}
                       currentUser={currentUser}
                       onUserChange={setCurrentUser}
+                      readOnly={readOnly}
                     />
                   )}
                 </div>
               );
             })}
             <div>&nbsp;</div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "10px",
-                marginTop: "20px",
-              }}
-            >
-              <button
-                onClick={() => {
-                  const newCodeCell = emptyCodeCell.set("source", "");
-                  const newNotebook = appendCellToNotebook(
-                    notebook,
-                    newCodeCell,
-                  );
-                  const newCellId = newNotebook.cellOrder.last() ?? null;
-                  setNotebook(newNotebook, { isTrusted: undefined });
-                  if (newCellId) {
-                    setActiveCellId(newCellId);
-                    setCellIdRequiringFocus(newCellId);
-                  }
-                }}
+            {!readOnly && (
+              <div
                 style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#1976d2",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "10px",
+                  marginTop: "20px",
                 }}
               >
-                Add Code Cell
-              </button>
-              <button
-                onClick={() => {
-                  const newMarkdownCell = emptyMarkdownCell.set("source", "");
-                  const newNotebook = appendCellToNotebook(
-                    notebook,
-                    newMarkdownCell,
-                  );
-                  const newCellId = newNotebook.cellOrder.last() ?? null;
-                  setNotebook(newNotebook, { isTrusted: undefined });
-                  if (newCellId) {
-                    setActiveCellId(newCellId);
-                    setCellIdRequiringFocus(newCellId);
-                  }
-                }}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#1976d2",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                Add Markdown Cell
-              </button>
-            </div>
+                <button
+                  onClick={() => {
+                    const newCodeCell = emptyCodeCell.set("source", "");
+                    const newNotebook = appendCellToNotebook(
+                      notebook,
+                      newCodeCell,
+                    );
+                    const newCellId = newNotebook.cellOrder.last() ?? null;
+                    setNotebook(newNotebook, { isTrusted: undefined });
+                    if (newCellId) {
+                      setActiveCellId(newCellId);
+                      setCellIdRequiringFocus(newCellId);
+                    }
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#1976d2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Code Cell
+                </button>
+                <button
+                  onClick={() => {
+                    const newMarkdownCell = emptyMarkdownCell.set("source", "");
+                    const newNotebook = appendCellToNotebook(
+                      notebook,
+                      newMarkdownCell,
+                    );
+                    const newCellId = newNotebook.cellOrder.last() ?? null;
+                    setNotebook(newNotebook, { isTrusted: undefined });
+                    if (newCellId) {
+                      setActiveCellId(newCellId);
+                      setCellIdRequiringFocus(newCellId);
+                    }
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#1976d2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Markdown Cell
+                </button>
+              </div>
+            )}
             <div>&nbsp;</div>
             {notebook.cellOrder.size === 0 &&
+              !readOnly &&
               !parsedUrlParams &&
               !localname && (
                 <div

@@ -110,6 +110,7 @@ type NotebookViewProps = {
   onRedo?: () => void;
   activeCellId?: string;
   setActiveCellId: (cellId: string | undefined) => void;
+  renderOnly?: boolean;
 };
 
 const NotebookView: FunctionComponent<NotebookViewProps> = ({
@@ -127,6 +128,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
   onRedo,
   activeCellId,
   setActiveCellId,
+  renderOnly,
 }) => {
   const navigate = useNavigate();
   const paperRef = useRef<HTMLDivElement>(null);
@@ -150,6 +152,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
 
   const hasLocalChanges = useHasLocalChanges(notebook, remoteNotebook);
 
+  const ignoreStorage = !!renderOnly;
   const loadRemoteNotebook = useLoadRemoteNotebook(
     parsedUrlParams,
     localname,
@@ -158,6 +161,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     setRemoteNotebookFilePath,
     setNotebook,
     setActiveCellId,
+    ignoreStorage,
   );
 
   const resetToRemoteVersion = useCallback(() => {
@@ -177,10 +181,12 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
     setLoadError,
     setNotebook,
     setActiveCellId,
+    ignoreStorage,
   );
 
   // Save notebook on changes with debouncing and send to parent if embedded
   useEffect(() => {
+    if (renderOnly) return;
     const serializedNotebook = serializeNotebook(notebook);
     saveNotebookToStorageDebounced(
       serializedNotebook,
@@ -194,7 +200,14 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
         sendImmediately: false,
       });
     }
-  }, [notebook, parsedUrlParams, localname, notebookIsTrusted, embedded]);
+  }, [
+    notebook,
+    parsedUrlParams,
+    localname,
+    notebookIsTrusted,
+    embedded,
+    renderOnly,
+  ]);
 
   // Handle incoming messages from parent when embedded
   useEffect(() => {
@@ -369,6 +382,7 @@ const NotebookView: FunctionComponent<NotebookViewProps> = ({
       onClearNotebook={handleClearNotebook}
       notebookIsTrusted={notebookIsTrusted}
       fullWidthEnabled={fullWidthEnabled}
+      renderOnly={renderOnly}
     />
   );
 };

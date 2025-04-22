@@ -18,6 +18,7 @@ interface CodeCellViewProps {
   setNotebookIsTrusted: (trusted: boolean) => void;
   cellCollapsed: boolean;
   setCellCollapsed: (collapsed: boolean) => void;
+  readOnly?: boolean;
 }
 
 const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
@@ -30,6 +31,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
   setNotebookIsTrusted,
   cellCollapsed,
   setCellCollapsed,
+  readOnly,
 }) => {
   return (
     <div
@@ -47,6 +49,7 @@ const CodeCellView: FunctionComponent<CodeCellViewProps> = ({
         onChange={onChange}
         requiresFocus={requiresFocus}
         onFocus={onFocus}
+        readOnly={readOnly}
       />
       {cell.outputs.size > 0 && (
         <IfHasBeenVisible>

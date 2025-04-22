@@ -15,6 +15,7 @@ interface CellNotesProps {
   onDeleteNote: (index: number) => void;
   currentUser: string;
   onUserChange: (user: string) => void;
+  readOnly?: boolean;
 }
 
 const CellNotes: React.FC<CellNotesProps> = ({
@@ -26,6 +27,7 @@ const CellNotes: React.FC<CellNotesProps> = ({
   onCancel,
   currentUser,
   onUserChange,
+  readOnly,
 }) => {
   const [newNoteText, setNewNoteText] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -160,25 +162,29 @@ const CellNotes: React.FC<CellNotesProps> = ({
               </div>
               {editingIndex !== index && (
                 <div style={{ display: "flex", gap: 4 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleStartEdit(index)}
-                    title="Edit note"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      const ok = window.confirm(
-                        "Are you sure you want to delete this note?",
-                      );
-                      if (ok) onDeleteNote(index);
-                    }}
-                    title="Delete note"
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {!readOnly && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleStartEdit(index)}
+                      title="Edit note"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                  {!readOnly && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        const ok = window.confirm(
+                          "Are you sure you want to delete this note?",
+                        );
+                        if (ok) onDeleteNote(index);
+                      }}
+                      title="Delete note"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </div>
               )}
             </div>
@@ -186,7 +192,7 @@ const CellNotes: React.FC<CellNotesProps> = ({
         </Paper>
       )}
 
-      {isAdding && (
+      {isAdding && !readOnly && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <TextField
@@ -219,26 +225,28 @@ const CellNotes: React.FC<CellNotesProps> = ({
               autoFocus
               fullWidth
             />
-            <div style={{ display: "flex", gap: 4 }}>
-              <IconButton
-                size="small"
-                onClick={handleAddNote}
-                color="primary"
-                title="Save note (Shift+Enter)"
-              >
-                <SaveIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => {
-                  setNewNoteText("");
-                  onCancel();
-                }}
-                title="Cancel (Escape)"
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </div>
+            {!readOnly && (
+              <div style={{ display: "flex", gap: 4 }}>
+                <IconButton
+                  size="small"
+                  onClick={handleAddNote}
+                  color="primary"
+                  title="Save note (Shift+Enter)"
+                >
+                  <SaveIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setNewNoteText("");
+                    onCancel();
+                  }}
+                  title="Cancel (Escape)"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </div>
+            )}
           </div>
         </div>
       )}

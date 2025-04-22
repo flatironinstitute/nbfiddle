@@ -51,6 +51,7 @@ const AppContent = () => {
   const [searchParams] = useSearchParams();
   const { width, height } = useWindowDimensions();
   let hideAppBar = searchParams.get("embedded") === "1";
+  const renderOnly = searchParams.get("renderonly") === "1";
 
   // for now let's always hide the app bar
   // because it's not used for anything
@@ -59,6 +60,11 @@ const AppContent = () => {
 
   const appBarHeight = hideAppBar ? 0 : 50; // hard-coded to match the height of the AppBar
   const mainHeight = height - appBarHeight;
+
+  if (renderOnly) {
+    return <HomePage width={width} height={mainHeight} renderOnly={true} />;
+  }
+
   return (
     <div
       className="AppContentDiv"

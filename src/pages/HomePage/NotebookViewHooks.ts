@@ -93,6 +93,7 @@ export const useLoadRemoteNotebook = (
     o: { isTrusted: boolean | undefined },
   ) => void,
   setActiveCellId: (id: string) => void,
+  ignoreStorage: boolean,
 ) => {
   return useCallback(async () => {
     if (!parsedUrlParams) return;
@@ -103,7 +104,9 @@ export const useLoadRemoteNotebook = (
       const reconstructedNotebook: ImmutableNotebook = fromJS(notebookData);
       setRemoteNotebook(reconstructedNotebook);
       setRemoteNotebookFilePath(notebookFilePath);
-      const x = await loadNotebookFromStorage(parsedUrlParams, localname);
+      const x = !ignoreStorage
+        ? await loadNotebookFromStorage(parsedUrlParams, localname)
+        : undefined;
       const localModifiedNotebook = x?.notebook;
       const localModifiedNotebookReconstructed: ImmutableNotebook | null =
         localModifiedNotebook ? fromJS(localModifiedNotebook) : null;
@@ -132,6 +135,7 @@ export const useLoadRemoteNotebook = (
     setRemoteNotebookFilePath,
     setNotebook,
     setActiveCellId,
+    ignoreStorage,
   ]);
 };
 
@@ -145,9 +149,10 @@ export const useLoadSavedNotebook = (
     o: { isTrusted: boolean | undefined },
   ) => void,
   setActiveCellId: (id: string) => void,
+  ignoreStorage?: boolean,
 ) => {
   useEffect(() => {
-    if (parsedUrlParams) {
+    if (parsedUrlParams || ignoreStorage) {
       loadRemoteNotebook();
     } else {
       loadNotebookFromStorage(parsedUrlParams, localname)
@@ -175,6 +180,7 @@ export const useLoadSavedNotebook = (
     setLoadError,
     setNotebook,
     setActiveCellId,
+    ignoreStorage,
   ]);
 };
 

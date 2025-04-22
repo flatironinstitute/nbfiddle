@@ -15,6 +15,7 @@ type CodeCellEditorProps = {
   onChange: (cell: ImmutableCodeCell) => void;
   requiresFocus?: boolean;
   onFocus?: () => void;
+  readOnly?: boolean;
 };
 
 const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
@@ -22,6 +23,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
   onChange,
   requiresFocus,
   onFocus,
+  readOnly,
 }) => {
   const [editorHeight, setEditorHeight] = useState(35); // Initial height includes scrollbar space
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -146,6 +148,7 @@ const CodeCellEditor: FunctionComponent<CodeCellEditorProps> = ({
             alwaysConsumeMouseWheel: false, // very important so that the wheel events will not get consumed by the editor and we can scroll the main document
           },
           overviewRulerLanes: 0, // hide the overview ruler
+          readOnly,
         }}
         onMount={handleEditorMount}
       />

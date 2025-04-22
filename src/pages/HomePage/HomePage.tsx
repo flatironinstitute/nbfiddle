@@ -17,7 +17,7 @@ import {
   ImmutableNotebook,
 } from "@nteract/commutable";
 
-type HomePageProps = { width: number; height: number };
+type HomePageProps = { width: number; height: number; renderOnly?: boolean };
 
 interface NotebookParams {
   parsedUrlParams: ParsedUrlParams | null;
@@ -92,7 +92,11 @@ const defaultNotebookHistoryState: NotebookHistoryState = {
   notebookHistory: [],
 };
 
-const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
+const HomePage: FunctionComponent<HomePageProps> = ({
+  width,
+  height,
+  renderOnly,
+}) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [notebookParams, setNotebookParams] = useState<
     NotebookParams | undefined
@@ -236,47 +240,53 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
     );
   }
 
+  const mainHeight = renderOnly ? height - 5 : height - 40;
+
   return (
     <JupyterConnectivityProvider mode="jupyter-server">
       <Box sx={{ width: "100%", height: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", padding: 0, gap: 0 }}
-          >
-            {width > 700 && (
-              <img
-                src="/nbfiddle-logo.svg"
-                alt="nbfiddle logo"
-                style={{
-                  height: "28px",
-                  marginLeft: "8px",
-                  marginRight: "-15px",
-                }}
-              />
-            )}
-            <Tabs
-              value={selectedTab}
-              onChange={(_, newValue) => setSelectedTab(newValue)}
-              variant="scrollable"
-              scrollButtons={true}
-              allowScrollButtonsMobile={true}
-              sx={{
-                minHeight: 36,
-                "& .MuiTab-root": {
-                  minHeight: 36,
-                  py: 0,
-                  px: 1.5,
-                  minWidth: "auto",
-                },
-              }}
+          {!renderOnly && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", padding: 0, gap: 0 }}
             >
-              <Tab label="Notebook" />
-              <Tab label="Jupyter Config" />
-              <Tab label="Storage" />
-              <Tab label="Settings" />
-              <Tab label="About" />
-            </Tabs>
-          </Box>
+              {width > 700 && (
+                <img
+                  src="/nbfiddle-logo.svg"
+                  alt="nbfiddle logo"
+                  style={{
+                    height: "28px",
+                    marginLeft: "8px",
+                    marginRight: "-15px",
+                  }}
+                />
+              )}
+              {!renderOnly && (
+                <Tabs
+                  value={selectedTab}
+                  onChange={(_, newValue) => setSelectedTab(newValue)}
+                  variant="scrollable"
+                  scrollButtons={true}
+                  allowScrollButtonsMobile={true}
+                  sx={{
+                    minHeight: 36,
+                    "& .MuiTab-root": {
+                      minHeight: 36,
+                      py: 0,
+                      px: 1.5,
+                      minWidth: "auto",
+                    },
+                  }}
+                >
+                  <Tab label="Notebook" />
+                  <Tab label="Jupyter Config" />
+                  <Tab label="Storage" />
+                  <Tab label="Settings" />
+                  <Tab label="About" />
+                </Tabs>
+              )}
+            </Box>
+          )}
         </Box>
         <Box
           sx={{
@@ -286,9 +296,9 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
         >
           <HorizontalSplitter
             width={width}
-            height={height - 40}
+            height={mainHeight}
             initialSplitterPosition={Math.min(350, width / 3)}
-            hideFirstChild={!chatEnabled}
+            hideFirstChild={!chatEnabled || renderOnly}
           >
             <ChatInterface
               width={0}
@@ -310,6 +320,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ width, height }) => {
               onRedo={canRedo ? handleRedo : undefined}
               activeCellId={activeCellId}
               setActiveCellId={setActiveCellId}
+              renderOnly={renderOnly}
             />
           </HorizontalSplitter>
         </Box>
