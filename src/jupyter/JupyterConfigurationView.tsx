@@ -1,4 +1,3 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -7,7 +6,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  Tooltip,
   Typography,
   Radio,
   Table,
@@ -33,7 +31,7 @@ import {
   builtInLocalServers,
   isJupyterServerConfig,
 } from "./types";
-import MarkdownContent from "@components/MarkdownContent";
+import MarkdownContent from "../components/MarkdownContent";
 
 type JupyterViewProps = {
   width?: number;
@@ -151,7 +149,10 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
   const [isAddServerDialogOpen, setIsAddServerDialogOpen] = useState(false);
   const [isDeleteConfirmDialogOpen, setIsDeleteConfirmDialogOpen] =
     useState(false);
+  const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
   const [serverToDelete, setServerToDelete] = useState<string | null>(null);
+  const [serverForToken, setServerForToken] = useState<string | null>(null);
+  const [tokenInput, setTokenInput] = useState("");
   const [newServerUrl, setNewServerUrl] = useState("");
   const [newServerName, setNewServerName] = useState("");
 
@@ -246,23 +247,30 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
     setIsDeleteConfirmDialogOpen(true);
   }, []);
 
-  const handleSetToken = useCallback(async (url: string) => {
-    const token = prompt("Enter the token for this server");
-    if (token === null) {
-      return;
-    }
-    setServerConfig((prev) => {
-      if (prev) {
-        return {
-          ...prev,
-          servers: prev.servers.map((s) =>
-            s.url === url ? { ...s, token } : s,
-          ),
-        };
-      }
-      return prev;
-    });
+  const handleSetToken = useCallback((url: string) => {
+    setServerForToken(url);
+    setTokenInput("");
+    setIsTokenDialogOpen(true);
   }, []);
+
+  const handleTokenSubmit = useCallback(() => {
+    if (serverForToken) {
+      setServerConfig((prev) => {
+        if (prev) {
+          return {
+            ...prev,
+            servers: prev.servers.map((s) =>
+              s.url === serverForToken ? { ...s, token: tokenInput } : s,
+            ),
+          };
+        }
+        return prev;
+      });
+    }
+    setIsTokenDialogOpen(false);
+    setServerForToken(null);
+    setTokenInput("");
+  }, [serverForToken, tokenInput]);
 
   const originToAllow = window.location.origin;
 
@@ -481,8 +489,47 @@ const JupyterConfigurationView: FunctionComponent<JupyterViewProps> = ({
           </DialogActions>
         </Dialog>
 
+        {/* Token Dialog */}
+        <Dialog
+          open={isTokenDialogOpen}
+          onClose={() => {
+            setIsTokenDialogOpen(false);
+            setServerForToken(null);
+            setTokenInput("");
+          }}
+        >
+          <DialogTitle>Set Server Token</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Token"
+              type="text"
+              fullWidth
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setIsTokenDialogOpen(false);
+                setServerForToken(null);
+                setTokenInput("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleTokenSubmit}>Save</Button>
+          </DialogActions>
+        </Dialog>
+
         {/* Host Instructions */}
-        <MarkdownContent content={hostInstructions} />
+        <MarkdownContent
+          content={hostInstructions
+            .split("{ originToAllow }")
+            .join(originToAllow)}
+        />
       </Box>
     </ScrollY>
   );
@@ -500,7 +547,7 @@ pip install jupyterlab
 Then, start JupyterLab with the following command:
 
 \`\`\`bash
-jupyter lab --NotebookApp.allow_origin='http://localhost:3000' --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --MappingKernelManager.cull_interval="300" --MappingKernelManager.cull_idle_timeout="300" --MappingKernelManager.cull_connected="True"
+jupyter lab --NotebookApp.allow_origin='{ originToAllow }' --NotebookApp.token='' --NotebookApp.disable_check_xsrf="True" --no-browser --port=8888 --MappingKernelManager.cull_interval="300" --MappingKernelManager.cull_idle_timeout="300" --MappingKernelManager.cull_connected="True"
 \`\`\`
 
 This command allows connections from your local frontend application, disables the token for easier access, and sets up kernel culling to manage resources effectively.
@@ -510,7 +557,7 @@ Finally, update the URL and optional token in the form above to connect to your 
 **To connect to JupyterHub (e.g., DANDI Hub)**, you can use the \`jupyter-web-proxy\` package. Run:
 
 \`\`\`bash
-npx jupyter-web-proxy https://hub.dandiarchive.org/user/<user> -t <token> -o http://localhost:8010
+npx jupyter-web-proxy https://hub.dandiarchive.org/user/<user> -t <token> -o { originToAllow }
 \`\`\`
 
 Replace \`<user>\` with your username and \`<token>\` with your JupyterHub token. Then select http://localhost:8010 above.
